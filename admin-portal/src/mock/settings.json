@@ -1,0 +1,90 @@
+{
+  "roles": {
+    "Super Admin": {
+      "canEditPages": true,
+      "canManageTemplates": true,
+      "canManagePayment": true,
+      "canManageGlobalSettings": true,
+      "canManageAnnouncements": true
+    },
+    "Turf Owner": {
+      "canEditPages": false,
+      "canManageTemplates": false,
+      "canManagePayment": false,
+      "canManageGlobalSettings": false,
+      "canManageAnnouncements": false
+    },
+    "Support": {
+      "canEditPages": false,
+      "canManageTemplates": true,
+      "canManagePayment": false,
+      "canManageGlobalSettings": false,
+      "canManageAnnouncements": true
+    }
+  },
+  "pages": {
+    "About Us": "Welcome to our platform...",
+    "FAQ": "Frequently Asked Questions...",
+    "Terms & Conditions": "These are the terms...",
+    "Privacy Policy": "We respect your privacy...",
+    "Contact Us": "Reach out to us via email or phone..."
+  },
+  "templates": {
+    "SMS": {
+      "BookingConfirmation": "Hello {{name}}, your booking is confirmed.",
+      "BookingCancellation": "Hello {{name}}, your booking has been cancelled."
+    },
+    "Email": {
+      "BookingConfirmation": "<p>Hello {{name}},</p><p>Your booking is confirmed.</p>",
+      "BookingCancellation": "<p>Hello {{name}},</p><p>Your booking has been cancelled.</p>",
+      "PasswordReset": "<p>Hello {{name}},</p><p>Click here to reset your password: {{resetLink}}</p>"
+    },
+    "PushNotifications": {
+      "NewBooking": "You have a new booking from {{customer}}.",
+      "RefundProcessed": "A refund of {{amount}} has been processed."
+    }
+  },
+  "credentials": {
+    "stripe": {
+      "publicKey": "pk_test_12345",
+      "secretKey": "sk_test_12345"
+    },
+    "paypal": {
+      "clientId": "paypal_test_67890",
+      "clientSecret": "paypal_secret_67890"
+    },
+    "twilio": {
+      "accountSid": "ACxxxxxxxxxxxxxxxx",
+      "authToken": "xxxxxxxxxxxxxxxx"
+    },
+    "firebase": {
+      "serverKey": "AAAA_xxxxxx"
+    }
+  },
+  "global": {
+    "currency": "INR",
+    "timezone": "Asia/Kolkata",
+    "businessHours": "09:00 - 21:00",
+    "dateFormat": "DD-MM-YYYY",
+    "timeFormat": "HH:mm",
+    "taxPercent": 18,
+    "commissionPercent": 10,
+    "autoConfirmBookings": true
+  },
+  "announcements": [
+    "Welcome to our platform!",
+    "Check our latest offers.",
+    "Maintenance scheduled on 15th Aug from 12:00 PM to 4:00 PM."
+  ],
+  "seo": {
+    "metaTitle": "Best Sports Turf Booking Platform",
+    "metaDescription": "Book sports turfs online quickly and securely.",
+    "metaKeywords": ["sports", "turf", "booking", "online"]
+  },
+  "features": {
+    "enableRefunds": true,
+    "enableReviews": true,
+    "enableCoupons": true,
+    "enablePushNotifications": true
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "dashboardOverview": {
+    "totalTurfs": 12,
+    "activeBookings": 45,
+    "upcomingBookings": 20,
+    "totalRevenue": 152000
+  },
+  "bookings": [
+    {
+      "id": 1,
+      "customer": "Rahul Sharma",
+      "turf": "Turf A",
+      "date": "2025-08-28",
+      "time": "18:00-20:00",
+      "status": "Confirmed"
+    },
+    {
+      "id": 2,
+      "customer": "Sneha Patil",
+      "turf": "Turf B",
+      "date": "2025-08-28",
+      "time": "20:00-22:00",
+      "status": "Pending"
+    },
+    {
+      "id": 3,
+      "customer": "Vikas Joshi",
+      "turf": "Turf C",
+      "date": "2025-08-29",
+      "time": "06:00-08:00",
+      "status": "Confirmed"
+    },
+    {
+      "id": 4,
+      "customer": "Neha Kulkarni",
+      "turf": "Turf A",
+      "date": "2025-08-29",
+      "time": "08:00-10:00",
+      "status": "Cancelled"
+    },
+    {
+      "id": 5,
+      "customer": "Aman Gupta",
+      "turf": "Turf D",
+      "date": "2025-08-30",
+      "time": "19:00-21:00",
+      "status": "Confirmed"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Akash Wagh",
+      "email": "akash@turf.com",
+      "role": "Super Admin",
+      "status": "Active",
+      "lastLogin": "2025-08-20 10:15 AM"
+    },
+    {
+      "id": 2,
+      "name": "Rohit Sharma",
+      "email": "rohit@turf.com",
+      "role": "Turf Owner",
+      "status": "Active",
+      "lastLogin": "2025-08-23 02:40 PM"
+    },
+    {
+      "id": 3,
+      "name": "Sneha Patil",
+      "email": "sneha@turf.com",
+      "role": "Support",
+      "status": "Inactive",
+      "lastLogin": "2025-08-10 11:00 AM"
+    },
+    {
+      "id": 4,
+      "name": "Admin Backup",
+      "email": "backup@turf.com",
+      "role": "Super Admin",
+      "status": "Active",
+      "lastLogin": "2025-08-22 09:30 AM"
+    },
+    {
+      "id": 5,
+      "name": "Vikas Jadhav",
+      "email": "vikas@turf.com",
+      "role": "Turf Owner",
+      "status": "Active",
+      "lastLogin": "2025-08-21 05:20 PM"
+    },
+    {
+      "id": 6,
+      "name": "Priya Deshmukh",
+      "email": "priya@turf.com",
+      "role": "Manager",
+      "status": "Active",
+      "lastLogin": "2025-08-24 09:45 AM"
+    },
+    {
+      "id": 7,
+      "name": "Amit Kulkarni",
+      "email": "amit@turf.com",
+      "role": "Staff",
+      "status": "Inactive",
+      "lastLogin": "2025-07-30 06:10 PM"
+    },
+    {
+      "id": 8,
+      "name": "Neha Shinde",
+      "email": "neha@turf.com",
+      "role": "Support",
+      "status": "Active",
+      "lastLogin": "2025-08-24 01:15 PM"
+    },
+    {
+      "id": 9,
+      "name": "Karan Pawar",
+      "email": "karan@turf.com",
+      "role": "Manager",
+      "status": "Active",
+      "lastLogin": "2025-08-19 04:30 PM"
+    },
+    {
+      "id": 10,
+      "name": "Anjali More",
+      "email": "anjali@turf.com",
+      "role": "Staff",
+      "status": "Active",
+      "lastLogin": "2025-08-18 10:55 AM"
+    }
+  ],
+  "turfs": [
+    {
+      "id": 1,
+      "name": "Turf A",
+      "location": "Nashik",
+      "pricePerHour": 1200,
+      "status": "Active"
+    },
+    {
+      "id": 2,
+      "name": "Turf B",
+      "location": "Pune",
+      "pricePerHour": 1500,
+      "status": "Active"
+    },
+    {
+      "id": 3,
+      "name": "Turf C",
+      "location": "Mumbai",
+      "pricePerHour": 1800,
+      "status": "Maintenance"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+    "bookings": [
+        {
+            "id": 1,
+            "customer": "Rahul Sharma",
+            "turfId": 1,
+            "turf": "Turf A",
+            "date": "2025-08-28",
+            "time": "18:00-20:00",
+            "status": "Confirmed"
+        },
+        {
+            "id": 2,
+            "customer": "Sneha Patil",
+            "turfId": 2,
+            "turf": "Turf B",
+            "date": "2025-08-28",
+            "time": "20:00-22:00",
+            "status": "Pending"
+        },
+        {
+            "id": 3,
+            "customer": "Vikas Joshi",
+            "turfId": 3,
+            "turf": "Turf C",
+            "date": "2025-08-29",
+            "time": "06:00-08:00",
+            "status": "Confirmed"
+        },
+        {
+            "id": 4,
+            "customer": "Neha Kulkarni",
+            "turfId": 1,
+            "turf": "Turf A",
+            "date": "2025-08-29",
+            "time": "08:00-10:00",
+            "status": "Cancelled"
+        },
+        {
+            "id": 5,
+            "customer": "Aman Gupta",
+            "turfId": 4,
+            "turf": "Turf D",
+            "date": "2025-08-30",
+            "time": "19:00-21:00",
+            "status": "Confirmed"
+        }
+    ]
+}

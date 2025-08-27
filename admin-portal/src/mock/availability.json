@@ -1,0 +1,35 @@
+{
+    "availability": [
+        {
+            "turfId": 1,
+            "slots": [
+                {
+                    "date": "2025-08-28",
+                    "time": "06:00-08:00",
+                    "status": "available",
+                    "pricePerHour": 1200,
+                    "minBookingHours": 2
+                },
+                {
+                    "date": "2025-08-28",
+                    "time": "08:00-10:00",
+                    "status": "blocked",
+                    "pricePerHour": 1200,
+                    "minBookingHours": 2
+                }
+            ]
+        },
+        {
+            "turfId": 2,
+            "slots": [
+                {
+                    "date": "2025-08-28",
+                    "time": "18:00-20:00",
+                    "status": "available",
+                    "pricePerHour": 1000,
+                    "minBookingHours": 1
+                }
+            ]
+        }
+    ]
+}

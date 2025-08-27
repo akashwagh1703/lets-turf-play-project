@@ -1,0 +1,273 @@
+{
+    "turfs": [
+        {
+            "id": 1,
+            "name": "Greenfield Arena",
+            "location": {
+                "state": "Maharashtra",
+                "city": "Pune",
+                "village": "Hinjewadi",
+                "latitude": 18.5904,
+                "longitude": 73.7781
+            },
+            "status": "active",
+            "approved": true,
+            "pricePerHour": {
+                "weekdays": 1200,
+                "weekends": 1500
+            },
+            "media": {
+                "photos": [
+                    "turf1.jpg",
+                    "turf1_2.jpg"
+                ],
+                "videos": [
+                    "turf1_intro.mp4"
+                ],
+                "gifs": [
+                    "turf1_animation.gif"
+                ],
+                "documents": [
+                    "turf1_brochure.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 150,
+                "revenue": 180000
+            },
+            "ownerRole": "manager",
+            "ownerId": 2,
+            "amenities": {
+                "lighting": true,
+                "parking": true,
+                "seating": true,
+                "refreshments": true
+            }
+        },
+        {
+            "id": 2,
+            "name": "Blue Turf",
+            "location": {
+                "state": "Maharashtra",
+                "city": "Mumbai",
+                "village": "Bandra",
+                "latitude": 19.0544,
+                "longitude": 72.8406
+            },
+            "status": "inactive",
+            "approved": false,
+            "pricePerHour": {
+                "weekdays": 1000,
+                "weekends": 1200
+            },
+            "media": {
+                "photos": [
+                    "turf2.jpg",
+                    "turf2_2.jpg"
+                ],
+                "videos": [
+                    "turf2_promo.mp4"
+                ],
+                "gifs": [
+                    "turf2_animation.gif"
+                ],
+                "documents": [
+                    "turf2_brochure.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 90,
+                "revenue": 90000
+            },
+            "ownerRole": "manager",
+            "ownerId": 2,
+            "amenities": {
+                "lighting": true,
+                "parking": false,
+                "seating": true,
+                "refreshments": false
+            }
+        },
+        {
+            "id": 3,
+            "name": "Sunshine Sports Ground",
+            "location": {
+                "state": "Delhi",
+                "city": "New Delhi",
+                "village": "Dwarka",
+                "latitude": 28.6083,
+                "longitude": 77.0387
+            },
+            "status": "active",
+            "approved": true,
+            "pricePerHour": {
+                "weekdays": 1500,
+                "weekends": 1800
+            },
+            "media": {
+                "photos": [
+                    "turf3.jpg",
+                    "turf3_2.jpg",
+                    "turf3_3.jpg"
+                ],
+                "videos": [
+                    "turf3_intro.mp4",
+                    "turf3_tour.mp4"
+                ],
+                "gifs": [
+                    "turf3_animation.gif"
+                ],
+                "documents": [
+                    "turf3_brochure.pdf",
+                    "turf3_rules.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 200,
+                "revenue": 300000
+            },
+            "ownerRole": "manager",
+            "ownerId": 103,
+            "amenities": {
+                "lighting": true,
+                "parking": true,
+                "seating": true,
+                "refreshments": true
+            }
+        },
+        {
+            "id": 4,
+            "name": "Royal Turf Arena",
+            "location": {
+                "state": "Karnataka",
+                "city": "Bengaluru",
+                "village": "Whitefield",
+                "latitude": 12.9716,
+                "longitude": 77.5946
+            },
+            "status": "active",
+            "approved": true,
+            "pricePerHour": {
+                "weekdays": 1800,
+                "weekends": 2200
+            },
+            "media": {
+                "photos": [
+                    "turf4.jpg",
+                    "turf4_2.jpg"
+                ],
+                "videos": [
+                    "turf4_intro.mp4"
+                ],
+                "gifs": [
+                    "turf4_animation.gif"
+                ],
+                "documents": [
+                    "turf4_brochure.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 250,
+                "revenue": 450000
+            },
+            "ownerRole": "manager",
+            "ownerId": 3,
+            "amenities": {
+                "lighting": true,
+                "parking": true,
+                "seating": false,
+                "refreshments": true
+            }
+        },
+        {
+            "id": 5,
+            "name": "City Sports Complex",
+            "location": {
+                "state": "Tamil Nadu",
+                "city": "Chennai",
+                "village": "Velachery",
+                "latitude": 13.0227,
+                "longitude": 80.2316
+            },
+            "status": "inactive",
+            "approved": false,
+            "pricePerHour": {
+                "weekdays": 1300,
+                "weekends": 1600
+            },
+            "media": {
+                "photos": [
+                    "turf5.jpg"
+                ],
+                "videos": [
+                    "turf5_intro.mp4"
+                ],
+                "gifs": [
+                    "turf5_animation.gif"
+                ],
+                "documents": [
+                    "turf5_brochure.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 120,
+                "revenue": 156000
+            },
+            "ownerRole": "manager",
+            "ownerId": 4,
+            "amenities": {
+                "lighting": false,
+                "parking": true,
+                "seating": true,
+                "refreshments": false
+            }
+        },
+        {
+            "id": 6,
+            "name": "Elite Turf Club",
+            "location": {
+                "state": "West Bengal",
+                "city": "Kolkata",
+                "village": "Salt Lake",
+                "latitude": 22.5743,
+                "longitude": 88.4356
+            },
+            "status": "active",
+            "approved": true,
+            "pricePerHour": {
+                "weekdays": 2000,
+                "weekends": 2500
+            },
+            "media": {
+                "photos": [
+                    "turf6.jpg",
+                    "turf6_2.jpg",
+                    "turf6_3.jpg"
+                ],
+                "videos": [
+                    "turf6_intro.mp4",
+                    "turf6_tour.mp4"
+                ],
+                "gifs": [
+                    "turf6_animation.gif"
+                ],
+                "documents": [
+                    "turf6_brochure.pdf",
+                    "turf6_rules.pdf"
+                ]
+            },
+            "performance": {
+                "bookings": 300,
+                "revenue": 600000
+            },
+            "ownerRole": "manager",
+            "ownerId": 5,
+            "amenities": {
+                "lighting": true,
+                "parking": true,
+                "seating": true,
+                "refreshments": true
+            }
+        }
+    ]
+}

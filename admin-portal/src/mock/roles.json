@@ -1,0 +1,39 @@
+{
+    "roles": [
+        {
+            "id": 1,
+            "name": "Admin",
+            "permissions": [
+                "view_dashboard",
+                "manage_turfs",
+                "manage_bookings",
+                "manage_users",
+                "view_reports"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Manager",
+            "permissions": [
+                "view_dashboard",
+                "manage_bookings",
+                "view_reports"
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Staff",
+            "permissions": [
+                "view_dashboard",
+                "manage_bookings"
+            ]
+        }
+    ],
+    "permissions": [
+        "view_dashboard",
+        "manage_turfs",
+        "manage_bookings",
+        "manage_users",
+        "view_reports"
+    ]
+}

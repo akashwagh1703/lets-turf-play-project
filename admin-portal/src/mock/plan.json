@@ -1,0 +1,106 @@
+{
+    "plans": [
+        {
+            "id": 1,
+            "name": "Commission-Based",
+            "commissionPercent": 10,
+            "subscriptionFee": 0,
+            "billingCycle": "Per Booking",
+            "features": [
+                "Booking Management",
+                "Analytics Dashboard"
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Subscription",
+            "commissionPercent": 0,
+            "subscriptionFee": 2000,
+            "billingCycle": "Monthly",
+            "features": [
+                "Booking Management",
+                "Premium Support",
+                "Promotions"
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Premium Subscription",
+            "commissionPercent": 0,
+            "subscriptionFee": 5000,
+            "billingCycle": "Monthly",
+            "features": [
+                "Booking Management",
+                "Premium Support",
+                "Promotions",
+                "Multi-Turf Management",
+                "Priority Customer Support",
+                "Advanced Analytics"
+            ]
+        }
+    ],
+    "turfOwners": [
+        {
+            "id": 1,
+            "name": "Rahul Sharma",
+            "planId": 1,
+            "status": "Active",
+            "joinedDate": "2024-05-10",
+            "nextBillingDate": null
+        },
+        {
+            "id": 2,
+            "name": "Sneha Patil",
+            "planId": 2,
+            "status": "Trial",
+            "joinedDate": "2025-01-15",
+            "nextBillingDate": "2025-02-15"
+        },
+        {
+            "id": 3,
+            "name": "Amit Verma",
+            "planId": 3,
+            "status": "Active",
+            "joinedDate": "2024-11-01",
+            "nextBillingDate": "2025-09-01"
+        }
+    ],
+    "promoCodes": [
+        {
+            "code": "WELCOME100",
+            "discountPercent": 10,
+            "expiry": "2025-12-31",
+            "maxUsage": 100,
+            "used": 25,
+            "applicablePlans": [
+                1,
+                2,
+                3
+            ],
+            "newUsersOnly": true
+        },
+        {
+            "code": "SUMMER50",
+            "discountPercent": 5,
+            "expiry": "2025-09-30",
+            "maxUsage": 50,
+            "used": 10,
+            "applicablePlans": [
+                2,
+                3
+            ],
+            "newUsersOnly": false
+        },
+        {
+            "code": "PREMIUM25",
+            "discountPercent": 25,
+            "expiry": "2026-01-31",
+            "maxUsage": 200,
+            "used": 0,
+            "applicablePlans": [
+                3
+            ],
+            "newUsersOnly": false
+        }
+    ]
+}
