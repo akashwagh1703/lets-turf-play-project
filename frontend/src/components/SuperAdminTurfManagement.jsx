@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building, Search, Eye, Edit, Trash2, MapPin, Users, Calendar, DollarSign } from 'lucide-react';
 import Modal from 'react-modal';
@@ -10,6 +11,7 @@ import { apiService } from '../services/api';
 Modal.setAppElement('#root');
 
 const SuperAdminTurfManagement = () => {
+  const navigate = useNavigate();
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -252,7 +254,10 @@ const SuperAdminTurfManagement = () => {
                         <button onClick={() => handleView(turf)} className="text-blue-600 hover:text-blue-900 p-1 rounded">
                           <Eye size={16} />
                         </button>
-                        <button className="text-green-600 hover:text-green-900 p-1 rounded">
+                        <button 
+                          onClick={() => navigate(`/admin/turfs/edit/${turf.id}`)}
+                          className="text-green-600 hover:text-green-900 p-1 rounded"
+                        >
                           <Edit size={16} />
                         </button>
                         <button onClick={() => handleDelete(turf.id, turf.turf_name || turf.name)} className="text-red-600 hover:text-red-900 p-1 rounded">

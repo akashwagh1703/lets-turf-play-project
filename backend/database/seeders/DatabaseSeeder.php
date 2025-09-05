@@ -25,17 +25,27 @@ class DatabaseSeeder extends Seeder
         $basicPlan = \App\Models\RevenueModel::create([
             'name' => 'Basic Plan',
             'description' => 'Basic revenue sharing model for small turf owners',
-            'commission_percentage' => 10.00,
-            'monthly_fee' => 500.00,
-            'features' => ['Basic Dashboard', 'Booking Management', 'Customer Support'],
+            'type' => 'subscription',
+            'price' => 500.00,
+            'billing_cycle' => 'monthly',
+            'commission_rate' => 10.00,
+            'turf_limit' => 5,
+            'staff_limit' => 10,
+            'booking_limit' => 100,
+            'features' => json_encode(['Basic Dashboard', 'Booking Management', 'Customer Support']),
         ]);
 
         $premiumPlan = \App\Models\RevenueModel::create([
             'name' => 'Premium Plan',
             'description' => 'Premium model with advanced features',
-            'commission_percentage' => 8.00,
-            'monthly_fee' => 1000.00,
-            'features' => ['Advanced Analytics', 'Marketing Tools', 'Priority Support', 'Custom Branding'],
+            'type' => 'subscription',
+            'price' => 1000.00,
+            'billing_cycle' => 'monthly',
+            'commission_rate' => 8.00,
+            'turf_limit' => 20,
+            'staff_limit' => 50,
+            'booking_limit' => 500,
+            'features' => json_encode(['Advanced Analytics', 'Marketing Tools', 'Priority Support', 'Custom Branding']),
         ]);
 
         // Create Turf Owner
@@ -53,6 +63,7 @@ class DatabaseSeeder extends Seeder
             'start_date' => now(),
             'end_date' => now()->addYear(),
             'amount_paid' => 6000.00,
+            'status' => 'active',
         ]);
 
         // Create Staff

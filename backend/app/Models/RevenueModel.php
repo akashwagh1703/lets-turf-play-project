@@ -14,25 +14,30 @@ class RevenueModel extends Model
         'description',
         'features',
         'type',
-        'monthly_fee',
-        'yearly_fee',
-        'commission_percentage',
+        'price',
+        'monthly_price',
+        'yearly_price',
+        'billing_cycle',
+        'turf_limit',
+        'staff_limit',
+        'booking_limit',
+        'commission_rate',
         'status',
         'is_popular',
-        'sort_order',
-        'max_turfs',
-        'max_staff'
+        'sort_order'
     ];
 
     protected $casts = [
         'status' => 'boolean',
         'is_popular' => 'boolean',
-        'monthly_fee' => 'decimal:2',
-        'yearly_fee' => 'decimal:2',
-        'commission_percentage' => 'decimal:2',
+        'price' => 'decimal:2',
+        'monthly_price' => 'decimal:2',
+        'yearly_price' => 'decimal:2',
+        'commission_rate' => 'decimal:2',
         'sort_order' => 'integer',
-        'max_turfs' => 'integer',
-        'max_staff' => 'integer'
+        'turf_limit' => 'integer',
+        'staff_limit' => 'integer',
+        'booking_limit' => 'integer'
     ];
 
     public function getFormattedTypeAttribute()
@@ -47,19 +52,19 @@ class RevenueModel extends Model
 
     public function getYearlySavingsAttribute()
     {
-        if (!$this->monthly_fee || !$this->yearly_fee) {
+        if (!$this->monthly_price || !$this->yearly_price) {
             return 0;
         }
-        return ($this->monthly_fee * 12) - $this->yearly_fee;
+        return ($this->monthly_price * 12) - $this->yearly_price;
     }
 
     public function getSavingsPercentageAttribute()
     {
-        if (!$this->monthly_fee || !$this->yearly_fee) {
+        if (!$this->monthly_price || !$this->yearly_price) {
             return 0;
         }
-        $monthlyCost = $this->monthly_fee * 12;
-        return round((($monthlyCost - $this->yearly_fee) / $monthlyCost) * 100);
+        $monthlyCost = $this->monthly_price * 12;
+        return round((($monthlyCost - $this->yearly_price) / $monthlyCost) * 100);
     }
 
     public function users()

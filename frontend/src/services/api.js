@@ -32,8 +32,12 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
     
-    const message = error.response?.data?.message || 'An error occurred';
-    toast.error(message);
+    // Don't show toast for validation errors (422) as they're handled by forms
+    if (error.response?.status !== 422) {
+      const message = error.response?.data?.message || 'An error occurred';
+      toast.error(message);
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -54,14 +58,28 @@ export const apiService = {
   deleteTurf: (id) => api.delete(`/turfs/${id}`),
   
   getTurfOwners: (params = {}) => {
-    const queryParams = { per_page: params.per_page || 10, include: 'turfs,subscriptions.revenueModel' };
-    if (params.search) queryParams['filter[name]'] = params.search;
+    const queryParams = { 
+      per_page: params.per_page || 10, 
+      include: 'turfs,subscriptions.revenueModel'
+    };
+    
+    if (params.search) {
+      queryParams['filter[name]'] = params.search;
+    }
+    
     if (params.status && params.status !== 'all') {
       queryParams['filter[status]'] = params.status === 'active';
     }
-    if (params.page) queryParams.page = params.page;
+    
+    if (params.page) {
+      queryParams.page = params.page;
+    }
+    
     return api.get('/turf-owners', { params: queryParams });
   },
+  getTurfOwner: (id) => api.get(`/turf-owners/${id}`, { 
+    params: { include: 'turfs,subscriptions.revenueModel' } 
+  }),
   createTurfOwner: (data) => api.post('/turf-owners', data),
   updateTurfOwner: (id, data) => api.put(`/turf-owners/${id}`, data),
   deleteTurfOwner: (id) => api.delete(`/turf-owners/${id}`),
