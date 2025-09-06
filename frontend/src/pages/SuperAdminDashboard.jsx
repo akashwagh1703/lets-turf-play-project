@@ -270,65 +270,32 @@ const SuperAdminDashboard = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="relative bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 shadow-lg border border-gray-100/50 hover:shadow-xl transition-all duration-300 overflow-hidden group"
+      whileHover={{ y: -2 }}
+      className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
     >
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-gray-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
-      {/* Floating Orbs */}
-      <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-green-400/10 to-blue-400/10 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-      
-      <div className="relative z-10 flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{title}</p>
-          <div className="flex items-baseline space-x-2">
-            <p className="text-3xl font-black text-gray-900">
-              {prefix}<CountUp end={value} duration={2.5} separator="," />
-            </p>
-            {change && (
-              <div className="flex items-center space-x-1">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: 'spring' }}
-                  className={`flex items-center px-2 py-1 rounded-full text-xs font-bold ${
-                    trend === 'up' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {trend === 'up' ? (
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3 mr-1" />
-                  )}
-                  {change}%
-                </motion.div>
-              </div>
-            )}
-          </div>
-          <p className="text-xs text-gray-400 mt-2 font-medium">vs last month</p>
+          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {prefix}<CountUp end={value} duration={1.5} separator="," />
+          </p>
+          {change && (
+            <div className={`flex items-center mt-1 text-xs ${
+              trend === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {trend === 'up' ? (
+                <ArrowUpRight className="w-3 h-3 mr-1" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3 mr-1" />
+              )}
+              {change}% vs last month
+            </div>
+          )}
         </div>
-        
-        <motion.div 
-          whileHover={{ rotate: 360, scale: 1.1 }}
-          transition={{ duration: 0.6 }}
-          className={`relative w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${color} group-hover:shadow-xl transition-shadow duration-300`}
-        >
-          <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          <Icon className="w-7 h-7 text-white relative z-10" />
-        </motion.div>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
+          <Icon className="w-5 h-5 text-white" />
+        </div>
       </div>
-      
-      {/* Bottom Accent Line */}
-      <motion.div 
-        initial={{ width: 0 }}
-        animate={{ width: '100%' }}
-        transition={{ delay: 1, duration: 0.8 }}
-        className={`absolute bottom-0 left-0 h-1 ${color} opacity-60`}
-      />
     </motion.div>
   );
 
@@ -358,14 +325,14 @@ const SuperAdminDashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Enhanced Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+              {/* Stats Cards - First Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                   title="Total Revenue"
                   value={stats.total_revenue || 0}
                   change={12.5}
                   icon={DollarSign}
-                  color="bg-gradient-to-br from-green-500 to-emerald-600"
+                  color="bg-green-500"
                   trend="up"
                   prefix="₹"
                 />
@@ -374,7 +341,7 @@ const SuperAdminDashboard = () => {
                   value={stats.total_bookings || 0}
                   change={8.2}
                   icon={Calendar}
-                  color="bg-gradient-to-br from-blue-500 to-blue-600"
+                  color="bg-blue-500"
                   trend="up"
                 />
                 <StatCard
@@ -382,15 +349,19 @@ const SuperAdminDashboard = () => {
                   value={stats.active_turfs || 0}
                   change={-2.1}
                   icon={Building}
-                  color="bg-gradient-to-br from-purple-500 to-purple-600"
+                  color="bg-purple-500"
                   trend="down"
                 />
+              </div>
+
+              {/* Stats Cards - Second Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                   title="Turf Owners"
                   value={stats.active_owners || 0}
                   change={5.7}
                   icon={Users}
-                  color="bg-gradient-to-br from-indigo-500 to-indigo-600"
+                  color="bg-indigo-500"
                   trend="up"
                 />
                 <StatCard
@@ -398,7 +369,7 @@ const SuperAdminDashboard = () => {
                   value={stats.active_staff || 0}
                   change={3.4}
                   icon={UserCheck}
-                  color="bg-gradient-to-br from-cyan-500 to-cyan-600"
+                  color="bg-cyan-500"
                   trend="up"
                 />
                 <StatCard
@@ -406,7 +377,7 @@ const SuperAdminDashboard = () => {
                   value={stats.total_players || 0}
                   change={15.3}
                   icon={Activity}
-                  color="bg-gradient-to-br from-orange-500 to-orange-600"
+                  color="bg-orange-500"
                   trend="up"
                 />
               </div>

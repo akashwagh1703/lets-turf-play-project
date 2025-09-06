@@ -51,7 +51,7 @@ const SuperAdminLayout = () => {
         <Route path="/revenue" element={<RevenueModelManagement />} />
         <Route path="/players" element={<PlayerManagement />} />
         <Route path="/profile" element={<ProfileSettings />} />
-        <Route path="/settings" element={<SystemSettings />} />
+        <Route path="/settings" element={<ProfileSettings />} />
       </Routes>
     </Layout>
   );

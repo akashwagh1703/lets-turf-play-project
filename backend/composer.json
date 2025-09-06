@@ -14,7 +14,8 @@
         "predis/predis": "^2.2",
         "spatie/laravel-fractal": "^6.2",
         "spatie/laravel-query-builder": "^6.2",
-        "tymon/jwt-auth": "^2.2"
+        "tymon/jwt-auth": "^2.2",
+        "ext-pgsql": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

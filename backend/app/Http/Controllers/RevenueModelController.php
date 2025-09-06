@@ -10,29 +10,13 @@ class RevenueModelController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = RevenueModel::query();
+            // Return all revenue models by default
+            $revenueModels = RevenueModel::orderBy('price')->get();
             
-            if ($request->has('status') && $request->status !== 'all') {
-                $status = filter_var($request->status, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($status !== null) {
-                    $query->where('status', $status);
-                }
-            }
-            
-            if ($request->has('type')) {
-                $query->where('type', $request->type);
-            }
-            
-            $revenueModels = $query->orderBy('sort_order')->orderBy('monthly_price')->get();
-            
-            // Format features as array
-            $revenueModels->transform(function ($model) {
-                $model->features_array = json_decode($model->features, true) ?? [];
-                $model->yearly_discount = $model->monthly_price > 0 ? round((($model->monthly_price * 12 - $model->yearly_price) / ($model->monthly_price * 12)) * 100, 1) : 0;
-                return $model;
-            });
-            
-            return response()->json($revenueModels);
+            return response()->json([
+                'success' => true,
+                'data' => $revenueModels
+            ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -43,31 +27,31 @@ class RevenueModelController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'features' => 'required|array',
-            'type' => 'required|in:subscription,commission,fixed',
-            'monthly_price' => 'required|numeric|min:0',
-            'yearly_price' => 'required|numeric|min:0',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'turf_limit' => 'nullable|integer|min:1',
-            'staff_limit' => 'nullable|integer|min:1',
-            'booking_limit' => 'nullable|integer|min:1',
-            'is_popular' => 'boolean',
-            'sort_order' => 'integer|min:0',
+            'price' => 'required|numeric|min:0',
+            'duration_type' => 'required|in:daily,weekly,monthly,yearly,lifetime',
+            'duration_value' => 'required|integer|min:1',
+            'is_free' => 'boolean',
+            'max_turfs' => 'required|integer|min:1',
+            'max_staff' => 'required|integer|min:1',
+            'max_bookings_per_month' => 'required|integer|min:1',
+            'selected_features' => 'required|array',
             'status' => 'boolean'
         ]);
 
-        $data = $request->all();
-        $data['price'] = $data['monthly_price']; // Keep for compatibility
-        $data['features'] = json_encode($data['features']);
-        $data['billing_cycle'] = 'monthly';
-
-        $revenueModel = RevenueModel::create($data);
-        return response()->json($revenueModel, 201);
+        $revenueModel = RevenueModel::create($request->all());
+        return response()->json([
+            'success' => true,
+            'data' => $revenueModel,
+            'message' => 'Revenue model created successfully'
+        ], 201);
     }
 
     public function show(RevenueModel $revenueModel)
     {
-        return response()->json($revenueModel);
+        return response()->json([
+            'success' => true,
+            'data' => $revenueModel
+        ]);
     }
 
     public function update(Request $request, RevenueModel $revenueModel)
@@ -75,36 +59,31 @@ class RevenueModelController extends Controller
         $request->validate([
             'name' => 'string|max:255',
             'description' => 'string',
-            'features' => 'array',
-            'type' => 'in:subscription,commission,fixed',
-            'monthly_price' => 'numeric|min:0',
-            'yearly_price' => 'numeric|min:0',
-            'commission_rate' => 'nullable|numeric|min:0|max:100',
-            'turf_limit' => 'nullable|integer|min:1',
-            'staff_limit' => 'nullable|integer|min:1',
-            'booking_limit' => 'nullable|integer|min:1',
-            'status' => 'boolean',
-            'is_popular' => 'boolean',
-            'sort_order' => 'integer|min:0'
+            'price' => 'numeric|min:0',
+            'duration_type' => 'in:daily,weekly,monthly,yearly,lifetime',
+            'duration_value' => 'integer|min:1',
+            'is_free' => 'boolean',
+            'max_turfs' => 'integer|min:1',
+            'max_staff' => 'integer|min:1',
+            'max_bookings_per_month' => 'integer|min:1',
+            'selected_features' => 'array',
+            'status' => 'boolean'
         ]);
 
-        $data = $request->all();
-        
-        if (isset($data['features'])) {
-            $data['features'] = json_encode($data['features']);
-        }
-        
-        if (isset($data['monthly_price'])) {
-            $data['price'] = $data['monthly_price']; // Keep for compatibility
-        }
-
-        $revenueModel->update($data);
-        return response()->json($revenueModel);
+        $revenueModel->update($request->all());
+        return response()->json([
+            'success' => true,
+            'data' => $revenueModel,
+            'message' => 'Revenue model updated successfully'
+        ]);
     }
 
     public function destroy(RevenueModel $revenueModel)
     {
         $revenueModel->delete();
-        return response()->json(['message' => 'Revenue model deleted successfully']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Revenue model deleted successfully'
+        ]);
     }
 }

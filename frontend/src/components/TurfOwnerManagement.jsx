@@ -291,13 +291,13 @@ const TurfOwnerManagement = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-500">Plan</span>
                         <span className="font-medium text-gray-900">
-                          {owner.subscriptions?.[0]?.revenue_model?.name || 'No Plan'}
+                          {owner.current_plan || 'No Plan'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">Commission</span>
-                        <span className="font-medium text-green-600">
-                          {owner.subscriptions?.[0]?.revenue_model?.commission_rate || 0}%
+                        <span className="text-sm text-gray-500">Expires</span>
+                        <span className="font-medium text-gray-600">
+                          {owner.plan_expires ? new Date(owner.plan_expires).toLocaleDateString() : 'Never'}
                         </span>
                       </div>
                     </div>

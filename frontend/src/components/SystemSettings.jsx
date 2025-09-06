@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Bell, Shield, Database, Globe } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -20,16 +20,61 @@ const SystemSettings = () => {
       timezone: 'Asia/Kolkata'
     }
   });
+  const [loading, setLoading] = useState(true);
 
-  const handleSettingChange = (category, key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [key]: value
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/settings`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.settings) {
+          setSettings(data.settings);
+        }
       }
-    }));
-    toast.success('Setting updated');
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSettingChange = async (category, key, value) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/settings/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ category, key, value })
+      });
+
+      if (response.ok) {
+        setSettings(prev => ({
+          ...prev,
+          [category]: {
+            ...prev[category],
+            [key]: value
+          }
+        }));
+        toast.success('Setting updated successfully');
+      } else {
+        toast.error('Failed to update setting');
+      }
+    } catch (error) {
+      toast.error('Failed to update setting');
+    }
   };
 
   return (

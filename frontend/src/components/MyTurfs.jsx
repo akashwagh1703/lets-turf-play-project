@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building, Plus, Eye, Edit, Trash2, MapPin, Users, DollarSign, Search } from 'lucide-react';
+import { Building, Plus, Eye, Edit, Trash2, MapPin, Users, DollarSign, Search, AlertTriangle, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { apiService } from '../services/api';
@@ -11,18 +11,33 @@ const MyTurfs = () => {
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [planInfo, setPlanInfo] = useState(null);
 
   useEffect(() => {
     fetchMyTurfs();
+    fetchPlanInfo();
   }, []);
+
+  const fetchPlanInfo = async () => {
+    try {
+      const response = await apiService.getMyPlan();
+      setPlanInfo(response.data?.plan);
+    } catch (error) {
+      console.error('Failed to fetch plan info:', error);
+    }
+  };
 
   const fetchMyTurfs = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getTurfs({ owner_only: true });
-      setTurfs(response.data?.data || []);
+      const response = await apiService.getTurfs();
+      
+      // Handle Laravel pagination response
+      const turfsData = response.data?.data || response.data || [];
+      setTurfs(Array.isArray(turfsData) ? turfsData : []);
     } catch (error) {
-      toast.error('Failed to load turfs');
+      console.error('Failed to load turfs:', error);
+      toast.error(error.response?.data?.message || 'Failed to load turfs');
       setTurfs([]);
     } finally {
       setLoading(false);
@@ -43,11 +58,11 @@ const MyTurfs = () => {
 
     if (result.isConfirmed) {
       try {
-        await apiService.deleteTurf(id);
-        toast.success('Turf deleted successfully!');
+        const response = await apiService.deleteTurf(id);
+        toast.success(response.data?.message || 'Turf deleted successfully!');
         fetchMyTurfs();
       } catch (error) {
-        toast.error('Failed to delete turf');
+        toast.error(error.response?.data?.message || 'Failed to delete turf');
       }
     }
   };
@@ -82,13 +97,44 @@ const MyTurfs = () => {
             <p className="text-gray-600 mt-1">Manage your turf listings</p>
           </div>
           <button
-            onClick={() => navigate('/owner/turfs/add')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+            onClick={() => {
+              if (planInfo && turfs.length >= planInfo.limits?.turfs?.max) {
+                toast.error(`You have reached your turf limit (${planInfo.limits.turfs.max}). Upgrade your plan to add more turfs.`);
+                return;
+              }
+              navigate('/owner/turfs/add');
+            }}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+              planInfo && turfs.length >= planInfo.limits?.turfs?.max
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
             <Plus size={16} />
             <span>Add New Turf</span>
           </button>
         </motion.div>
+
+        {/* Plan Limit Warning - Only show when user has turfs AND reached limit */}
+        {planInfo && turfs.length > 0 && turfs.length >= planInfo.limits?.turfs?.max && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm"
+          >
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="text-yellow-600" size={20} />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-800">Turf Limit Reached</h3>
+                <p className="text-sm text-yellow-700">
+                  You have reached your turf limit ({planInfo.limits.turfs.max}). 
+                  <span className="font-medium"> Upgrade your plan to add more turfs.</span>
+                </p>
+              </div>
+              <Crown className="text-yellow-600" size={20} />
+            </div>
+          </motion.div>
+        )}
 
         {/* Search */}
         <motion.div

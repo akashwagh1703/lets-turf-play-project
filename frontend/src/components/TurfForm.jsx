@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Save, Upload, X, MapPin, Clock, Users, Camera, Video, FileText, Hash, Star, Check, Building } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -7,8 +7,10 @@ import { apiService } from '../services/api';
 
 const TurfForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
-  const isEdit = Boolean(id);
+  const isEdit = Boolean(id) && !location.pathname.includes('/view/');
+  const isView = Boolean(id) && location.pathname.includes('/view/');
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -43,6 +45,54 @@ const TurfForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
+
+  useEffect(() => {
+    if ((isEdit || isView) && id) {
+      fetchTurfData();
+    }
+  }, [isEdit, isView, id]);
+
+  const fetchTurfData = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getTurf(id);
+      const turf = response.data?.data || response.data;
+      
+      setFormData({
+        turf_name: turf.turf_name || '',
+        location: turf.location || '',
+        capacity: turf.capacity || '',
+        price_per_hour: turf.price_per_hour || '',
+        description: turf.description || '',
+        facilities: Array.isArray(turf.facilities) ? turf.facilities.join(', ') : turf.facilities || '',
+        rules: turf.rules || '',
+        contact_number: turf.contact_number || '',
+        email: turf.email || '',
+        opening_time: turf.opening_time || '',
+        closing_time: turf.closing_time || '',
+        turf_type: turf.turf_type || '',
+        surface_type: turf.surface_type || '',
+        size: turf.size || '',
+        parking_available: turf.parking_available || false,
+        changing_rooms: turf.changing_rooms || false,
+        washrooms: turf.washrooms || false,
+        lighting: turf.lighting || false,
+        water_facility: turf.water_facility || false,
+        first_aid: turf.first_aid || false,
+        security: turf.security || false,
+        hashtags: Array.isArray(turf.hashtags) ? turf.hashtags.join(', ') : turf.hashtags || '',
+        images: turf.images || [],
+        videos: turf.videos || [],
+        documents: turf.documents || [],
+        status: turf.status !== undefined ? turf.status : true
+      });
+    } catch (error) {
+      console.error('Failed to fetch turf data:', error);
+      toast.error('Failed to load turf data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const steps = [
     { number: 1, title: 'Basic Info', icon: Building },
@@ -176,7 +226,7 @@ const TurfForm = () => {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {isEdit ? 'Edit Turf' : 'Add New Turf'}
+              {isView ? 'View Turf' : isEdit ? 'Edit Turf' : 'Add New Turf'}
             </h1>
             <p className="text-gray-600 mt-1">
               Step {currentStep} of {totalSteps}: {steps[currentStep - 1].title}

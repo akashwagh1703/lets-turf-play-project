@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import MobileNavigation from './MobileNavigation';
 import PerformanceMonitor from './PerformanceMonitor';
 import Sidebar from './Sidebar';
+import NotificationCenter from './NotificationCenter';
 import { useNotifications } from '../hooks/useNotifications';
 import '../styles/header-animations.css';
 
@@ -38,6 +39,7 @@ const Layout = ({ children, activeTab }) => {
           { id: 'turfs', label: 'My Turfs', icon: '●' },
           { id: 'bookings', label: 'Bookings', icon: '▼' },
           { id: 'staff', label: 'Staff', icon: '♦' },
+          { id: 'analytics', label: 'Analytics', icon: '📊' },
         ];
       case 'staff':
         return [
@@ -74,7 +76,7 @@ const Layout = ({ children, activeTab }) => {
     <div className="h-screen flex bg-white">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:flex">
-        <Sidebar user={user} />
+        <Sidebar user={user} planInfo={null} />
       </div>
       
       {/* Main Content Area */}
@@ -120,19 +122,7 @@ const Layout = ({ children, activeTab }) => {
             </button>
             
             {/* Enhanced Notifications */}
-            <div className="relative">
-              <button className="ripple relative p-3 rounded-xl text-gray-500 hover:text-orange-600 hover:bg-orange-50 transition-all duration-300 group color-transition">
-                <span className="icon-bounce text-lg font-bold transition-transform duration-300 group-hover:scale-110">●</span>
-                {notifications.length > 0 && (
-                  <>
-                    <span className="notification-pulse absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-enhanced">
-                      {notifications.length > 99 ? '99+' : notifications.length}
-                    </span>
-                    <div className="absolute -top-1 -right-1 bg-red-400 rounded-full w-6 h-6 animate-ping opacity-75"></div>
-                  </>
-                )}
-              </button>
-            </div>
+            <NotificationCenter />
             
             {/* Enhanced User Profile */}
             <div className="relative">

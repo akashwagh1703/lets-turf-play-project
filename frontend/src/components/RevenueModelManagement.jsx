@@ -3,10 +3,14 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, DollarSign, Percent, Calendar, Check } from 'lucide-react';
+import { Plus, Edit, Trash2, ToggleLeft, ToggleRight, DollarSign, Percent, Calendar, Check, Settings, Users, Gift } from 'lucide-react';
 import { apiService } from '../services/api';
+import FeatureManagement from './FeatureManagement';
+import DynamicRevenueModel from './DynamicRevenueModel';
+import RevenueModelAssignment from './RevenueModelAssignment';
 
 const RevenueModelManagement = () => {
+  const [activeTab, setActiveTab] = useState('models');
   const [revenueModels, setRevenueModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -179,6 +183,12 @@ const RevenueModelManagement = () => {
     );
   }
 
+  const tabs = [
+    { id: 'models', label: 'Revenue Models', icon: DollarSign },
+    { id: 'features', label: 'Feature Management', icon: Settings },
+    { id: 'assignment', label: 'Model Assignment', icon: Users }
+  ];
+
   return (
     <div className="h-full bg-gray-50/30 overflow-auto">
       <div className="p-6 space-y-6">
@@ -189,20 +199,44 @@ const RevenueModelManagement = () => {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Revenue Models</h1>
-            <p className="text-gray-600 mt-1">Manage platform pricing and subscription models</p>
+            <h1 className="text-3xl font-bold text-gray-900">Revenue Management</h1>
+            <p className="text-gray-600 mt-1">Manage features, pricing models and assignments</p>
           </div>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 shadow-sm"
-          >
-            <Plus size={20} />
-            <span>Add Revenue Model</span>
-          </button>
         </motion.div>
 
-        {/* Revenue Models Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="flex space-x-8">
+            {tabs.map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <IconComponent size={16} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'features' && <FeatureManagement />}
+        {activeTab === 'models' && <DynamicRevenueModel />}
+        {activeTab === 'assignment' && <RevenueModelAssignment />}
+
+        {/* Legacy Content - Keep for backward compatibility */}
+        {activeTab === 'legacy' && (
+          <>
+            {/* Revenue Models Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {revenueModels.map((model, index) => (
             <motion.div
               key={model.id}
@@ -336,7 +370,9 @@ const RevenueModelManagement = () => {
               </div>
             </motion.div>
           ))}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <Modal

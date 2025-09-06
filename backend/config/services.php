@@ -35,4 +35,26 @@ return [
         ],
     ],
 
+    'razorpay' => [
+        'key' => env('RAZORPAY_KEY', 'rzp_test_key'),
+        'secret' => env('RAZORPAY_SECRET', 'rzp_test_secret'),
+    ],
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY', 'pk_test_key'),
+        'secret' => env('STRIPE_SECRET', 'sk_test_secret'),
+    ],
+
+    'payu' => [
+        'key' => env('PAYU_KEY', 'test_key'),
+        'secret' => env('PAYU_SECRET', 'test_secret'),
+        'salt' => env('PAYU_SALT', 'test_salt'),
+    ],
+
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+    ],
+
 ];

@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'subscription.limits' => \App\Http\Middleware\CheckSubscriptionLimits::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'plan.limits' => \App\Http\Middleware\PlanRestrictionMiddleware::class,
+            'feature.access' => \App\Http\Middleware\FeatureAccessMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

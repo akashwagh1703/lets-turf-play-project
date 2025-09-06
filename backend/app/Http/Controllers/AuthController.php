@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\RevenueModel;
+use App\Models\RevenueModelAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -45,6 +47,21 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
+
+        // Auto-assign free plan to new turf owners
+        if ($request->role === 'turf_owner') {
+            $freePlan = RevenueModel::where('is_free', true)->first();
+            if ($freePlan) {
+                RevenueModelAssignment::create([
+                    'owner_id' => $user->id,
+                    'revenue_model_id' => $freePlan->id,
+                    'start_date' => now(),
+                    'end_date' => null,
+                    'is_free_assignment' => true,
+                    'status' => 'active'
+                ]);
+            }
+        }
 
         $token = JWTAuth::fromUser($user);
 

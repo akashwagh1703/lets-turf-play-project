@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import TurfOwnerLayout from './layouts/TurfOwnerLayout';
@@ -9,9 +10,10 @@ import StaffLayout from './layouts/StaffLayout';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <div className="App">
           <Routes>
             <Route path="/login" element={<Login />} />
             
@@ -48,9 +50,10 @@ function App() {
             <Route path="/unauthorized" element={<div className="text-center mt-8">Unauthorized Access</div>} />
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+          </div>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

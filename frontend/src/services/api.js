@@ -56,6 +56,7 @@ export const apiService = {
   createTurf: (data) => api.post('/turfs', data),
   updateTurf: (id, data) => api.put(`/turfs/${id}`, data),
   deleteTurf: (id) => api.delete(`/turfs/${id}`),
+  getTurf: (id) => api.get(`/turfs/${id}`),
   
   getTurfOwners: (params = {}) => {
     const queryParams = { 
@@ -127,10 +128,33 @@ export const apiService = {
   updatePlayer: (id, data) => api.put(`/players/${id}`, data),
   deletePlayer: (id) => api.delete(`/players/${id}`),
   
-  getBookings: (params = {}) => api.get('/bookings', { params: { per_page: params.per_page || 10, include: params.include || 'turf,user', ...params } }),
-  createBooking: (data) => api.post('/bookings', data),
-  updateBooking: (id, data) => api.put(`/bookings/${id}`, data),
-  deleteBooking: (id) => api.delete(`/bookings/${id}`),
+  getBookings: (params = {}) => {
+    const queryParams = { 
+      per_page: params.per_page || 10, 
+      include: params.include || 'turf,user', 
+      ...params 
+    };
+    return api.get('/bookings', { params: queryParams });
+  },
+  createBooking: (data) => {
+    // Validate required fields
+    if (!data.turf_id || !data.date || !data.amount) {
+      return Promise.reject(new Error('Missing required booking data'));
+    }
+    return api.post('/bookings', data);
+  },
+  updateBooking: (id, data) => {
+    if (!id) {
+      return Promise.reject(new Error('Booking ID is required'));
+    }
+    return api.put(`/bookings/${id}`, data);
+  },
+  deleteBooking: (id) => {
+    if (!id) {
+      return Promise.reject(new Error('Booking ID is required'));
+    }
+    return api.delete(`/bookings/${id}`);
+  },
   
   getStaff: (params = {}) => {
     const queryParams = { per_page: params.per_page || 10, include: params.include || 'owner', ...params };
@@ -147,7 +171,7 @@ export const apiService = {
   getNotifications: () => api.get('/notifications'),
   
   // Analytics APIs
-  getAdvancedAnalytics: (params = {}) => api.get('/analytics/advanced', { params }),
+  getAdvancedAnalytics: (params = {}) => api.get('/advanced-analytics', { params }),
   getUserNotifications: (userId) => api.get(`/notifications/${userId}`),
   
   // Additional API methods
@@ -163,10 +187,33 @@ export const apiService = {
   getBookingStats: () => api.get('/bookings-stats'),
   
   // Available slots
-  getAvailableSlots: (turfId, date) => api.get(`/turfs/${turfId}/available-slots?date=${date}`),
+  getAvailableSlots: (turfId, date) => {
+    if (!turfId || !date) {
+      return Promise.reject(new Error('Turf ID and date are required'));
+    }
+    return api.get(`/turfs/${turfId}/available-slots`, { params: { date } });
+  },
   
   // Player analytics
   getPlayerAnalytics: () => api.get('/players/analytics'),
+  
+  // Features API
+  getFeatures: (params = {}) => api.get('/features', { params }),
+  createFeature: (data) => api.post('/features', data),
+  updateFeature: (id, data) => api.put(`/features/${id}`, data),
+  deleteFeature: (id) => api.delete(`/features/${id}`),
+  
+  // Revenue Model Assignment API
+  assignRevenueModel: (data) => api.post('/assign-revenue-model', data),
+  getRevenueModelAssignments: (params = {}) => api.get('/revenue-model-assignments', { params }),
+  
+  // Current Plan API
+  getMyPlan: () => api.get('/my-plan'),
+  
+  // Payment and Upgrade APIs
+  processPayment: (data) => api.post('/process-payment', data),
+  verifyPayment: (data) => api.post('/verify-payment', data),
+  upgradePlan: (planId) => api.post('/upgrade-plan', { plan_id: planId }),
 };
 
 export default api;

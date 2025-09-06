@@ -18,6 +18,8 @@ class Turf extends Model
         'contact_number',
         'email',
         'price_per_hour',
+        'pricing_structure',
+        'sport_type',
         'opening_time',
         'closing_time',
         'turf_type',
@@ -42,6 +44,7 @@ class Turf extends Model
     protected $casts = [
         'status' => 'boolean',
         'price_per_hour' => 'decimal:2',
+        'pricing_structure' => 'array',
         'parking_available' => 'boolean',
         'changing_rooms' => 'boolean',
         'washrooms' => 'boolean',

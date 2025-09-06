@@ -24,12 +24,20 @@ class RevenueModel extends Model
         'commission_rate',
         'status',
         'is_popular',
-        'sort_order'
+        'sort_order',
+        'duration_type',
+        'duration_value',
+        'is_free',
+        'max_turfs',
+        'max_staff',
+        'max_bookings_per_month',
+        'selected_features'
     ];
 
     protected $casts = [
         'status' => 'boolean',
         'is_popular' => 'boolean',
+        'is_free' => 'boolean',
         'price' => 'decimal:2',
         'monthly_price' => 'decimal:2',
         'yearly_price' => 'decimal:2',
@@ -37,7 +45,12 @@ class RevenueModel extends Model
         'sort_order' => 'integer',
         'turf_limit' => 'integer',
         'staff_limit' => 'integer',
-        'booking_limit' => 'integer'
+        'booking_limit' => 'integer',
+        'duration_value' => 'integer',
+        'max_turfs' => 'integer',
+        'max_staff' => 'integer',
+        'max_bookings_per_month' => 'integer',
+        'selected_features' => 'array'
     ];
 
     public function getFormattedTypeAttribute()
@@ -70,5 +83,18 @@ class RevenueModel extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(RevenueModelAssignment::class);
+    }
+
+    public function features()
+    {
+        if (!$this->selected_features) {
+            return collect([]);
+        }
+        return Feature::whereIn('id', $this->selected_features)->get();
     }
 }

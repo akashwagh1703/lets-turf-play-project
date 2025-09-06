@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Plus, Eye, Edit, Trash2, Search, Phone, Mail, UserCheck } from 'lucide-react';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import CountUp from 'react-countup';
+import { apiService } from '../services/api';
 
 Modal.setAppElement('#root');
 
@@ -22,44 +23,80 @@ const StaffManagement = () => {
     salary: '',
     shift_timing: ''
   });
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [planInfo, setPlanInfo] = useState(null);
 
-  // Mock data
-  const staffData = {
-    data: [
-      { id: 1, staff_name: 'Rajesh Kumar', email: 'rajesh@example.com', phone: '9876543210', position: 'Ground Keeper', salary: 25000, shift_timing: '6:00 AM - 2:00 PM', status: 'active', hire_date: '2023-06-15' },
-      { id: 2, staff_name: 'Priya Sharma', email: 'priya@example.com', phone: '9876543211', position: 'Receptionist', salary: 22000, shift_timing: '9:00 AM - 6:00 PM', status: 'active', hire_date: '2023-08-20' },
-      { id: 3, staff_name: 'Amit Singh', email: 'amit@example.com', phone: '9876543212', position: 'Security Guard', salary: 20000, shift_timing: '6:00 PM - 6:00 AM', status: 'inactive', hire_date: '2023-05-10' },
-      { id: 4, staff_name: 'Neha Gupta', email: 'neha@example.com', phone: '9876543213', position: 'Cleaner', salary: 18000, shift_timing: '7:00 AM - 3:00 PM', status: 'active', hire_date: '2023-09-05' }
-    ]
+  useEffect(() => {
+    fetchStaff();
+    fetchPlanInfo();
+  }, []);
+
+  const fetchPlanInfo = async () => {
+    try {
+      const response = await apiService.getMyPlan();
+      setPlanInfo(response.data?.plan);
+    } catch (error) {
+      console.error('Failed to fetch plan info:', error);
+    }
   };
 
-  const staff = staffData?.data || [];
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getStaff();
+      const staffData = response.data?.data || response.data || [];
+      setStaff(Array.isArray(staffData) ? staffData : []);
+    } catch (error) {
+      console.error('Failed to fetch staff:', error);
+      toast.error('Failed to load staff');
+      setStaff([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const stats = useMemo(() => ({
     total: staff.length,
-    active: staff.filter(s => s.status === 'active').length,
-    inactive: staff.filter(s => s.status === 'inactive').length,
-    totalSalary: staff.filter(s => s.status === 'active').reduce((sum, s) => sum + s.salary, 0)
+    active: staff.filter(s => s.status === true || s.status === 'active').length,
+    inactive: staff.filter(s => s.status === false || s.status === 'inactive').length,
+    totalSalary: staff.filter(s => s.status === true || s.status === 'active').reduce((sum, s) => sum + (parseFloat(s.salary) || 0), 0)
   }), [staff]);
 
   const filteredStaff = useMemo(() => {
     return staff.filter(member => {
       const matchesSearch = member.staff_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            member.position.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || member.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || 
+                           (statusFilter === 'active' && (member.status === true || member.status === 'active')) ||
+                           (statusFilter === 'inactive' && (member.status === false || member.status === 'inactive'));
       return matchesSearch && matchesStatus;
     });
   }, [staff, searchTerm, statusFilter]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (selectedStaff) {
-      toast.success('Staff updated successfully!');
-    } else {
-      toast.success('Staff added successfully!');
+    setLoading(true);
+    
+    try {
+      if (selectedStaff) {
+        const response = await apiService.updateStaff(selectedStaff.id, formData);
+        toast.success(response.data?.message || 'Staff updated successfully!');
+      } else {
+        const response = await apiService.createStaff(formData);
+        toast.success(response.data?.message || 'Staff added successfully!');
+      }
+      
+      setShowForm(false);
+      setSelectedStaff(null);
+      setFormData({ staff_name: '', email: '', phone: '', position: '', salary: '', shift_timing: '' });
+      fetchStaff();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save staff');
+    } finally {
+      setLoading(false);
     }
-    setShowForm(false);
-    setSelectedStaff(null);
-    setFormData({ staff_name: '', email: '', phone: '', position: '', salary: '', shift_timing: '' });
   };
 
   const handleView = (member) => {
@@ -93,13 +130,25 @@ const StaffManagement = () => {
     });
 
     if (result.isConfirmed) {
-      toast.success('Staff member removed successfully!');
+      try {
+        const response = await apiService.deleteStaff(id);
+        toast.success(response.data?.message || 'Staff member removed successfully!');
+        fetchStaff();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to remove staff');
+      }
     }
   };
 
-  const toggleStatus = (id, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    toast.success(`Staff ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
+  const toggleStatus = async (id, currentStatus) => {
+    const newStatus = !currentStatus;
+    try {
+      const response = await apiService.updateStaff(id, { status: newStatus });
+      toast.success(`Staff ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+      fetchStaff();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    }
   };
 
   const StatCard = ({ title, value, icon: Icon, color, prefix = '' }) => (
@@ -132,11 +181,19 @@ const StaffManagement = () => {
           </div>
           <button
             onClick={() => {
+              if (planInfo && staff.length >= planInfo.limits?.staff?.max) {
+                toast.error(`You have reached your staff limit (${planInfo.limits.staff.max}). Upgrade your plan to add more staff.`);
+                return;
+              }
               setSelectedStaff(null);
               setFormData({ staff_name: '', email: '', phone: '', position: '', salary: '', shift_timing: '' });
               setShowForm(true);
             }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+              planInfo && staff.length >= planInfo.limits?.staff?.max
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
             <Plus size={16} />
             <span>Add Staff</span>
@@ -149,6 +206,27 @@ const StaffManagement = () => {
           <StatCard title="Inactive Staff" value={stats.inactive} icon={Users} color="bg-red-500" />
           <StatCard title="Monthly Payroll" value={stats.totalSalary} icon={Users} color="bg-purple-500" prefix="₹" />
         </div>
+
+        {/* Plan Limit Warning */}
+        {planInfo && staff.length > 0 && staff.length >= planInfo.limits?.staff?.max && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm"
+          >
+            <div className="flex items-center space-x-3">
+              <Users className="text-yellow-600" size={20} />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-800">Staff Limit Reached</h3>
+                <p className="text-sm text-yellow-700">
+                  You have reached your staff limit ({planInfo.limits.staff.max}). 
+                  <span className="font-medium"> Upgrade your plan to add more staff members.</span>
+                </p>
+              </div>
+              <Users className="text-yellow-600" size={20} />
+            </div>
+          </motion.div>
+        )}
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center space-x-4">
@@ -188,7 +266,20 @@ const StaffManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStaff.map((member, index) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="text-gray-500 mt-2">Loading staff...</p>
+                    </td>
+                  </tr>
+                ) : filteredStaff.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      No staff members found
+                    </td>
+                  </tr>
+                ) : filteredStaff.map((member, index) => (
                   <motion.tr key={member.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -197,7 +288,7 @@ const StaffManagement = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{member.staff_name}</div>
-                          <div className="text-sm text-gray-500">Since {new Date(member.hire_date).getFullYear()}</div>
+                          <div className="text-sm text-gray-500">ID: {member.id}</div>
                         </div>
                       </div>
                     </td>
@@ -223,12 +314,12 @@ const StaffManagement = () => {
                       <button
                         onClick={() => toggleStatus(member.id, member.status)}
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full transition-colors ${
-                          member.status === 'active'
+                          member.status === true || member.status === 'active'
                             ? 'bg-green-100 text-green-800 hover:bg-green-200'
                             : 'bg-red-100 text-red-800 hover:bg-red-200'
                         }`}
                       >
-                        {member.status}
+                        {member.status === true || member.status === 'active' ? 'Active' : 'Inactive'}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -397,9 +488,9 @@ const StaffManagement = () => {
                   <div>
                     <label className="text-sm font-medium text-gray-500">Status</label>
                     <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                      selectedStaff.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      selectedStaff.status === true || selectedStaff.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {selectedStaff.status ? 'active' : 'inactive'}
+                      {selectedStaff.status === true || selectedStaff.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                 </div>

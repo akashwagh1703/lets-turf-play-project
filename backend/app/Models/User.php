@@ -77,4 +77,19 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsTo(RevenueModel::class);
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }

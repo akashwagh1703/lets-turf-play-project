@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Home, 
+  Users, 
+  Building2, 
+  UserCheck, 
+  CreditCard, 
+  DollarSign, 
+  Trophy, 
+  Calendar, 
+  BarChart3
+} from 'lucide-react';
 
 const Sidebar = ({ user }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -12,25 +24,31 @@ const Sidebar = ({ user }) => {
     switch (user?.role) {
       case 'super_admin':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: '■', path: '/admin/dashboard' },
-          { id: 'owners', label: 'Turf Owners', icon: '▲', path: '/admin/owners' },
-          { id: 'turfs', label: 'All Turfs', icon: '●', path: '/admin/turfs' },
-          { id: 'staff', label: 'Staff', icon: '♦', path: '/admin/staff' },
-          { id: 'subscription', label: 'Subscriptions', icon: '★', path: '/admin/subscription' },
-          { id: 'revenue', label: 'Revenue Models', icon: '◆', path: '/admin/revenue' },
-          { id: 'players', label: 'Players', icon: '♠', path: '/admin/players' },
+          { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/admin/dashboard' },
+          { id: 'owners', label: 'Turf Owners', icon: Users, path: '/admin/owners' },
+          { id: 'turfs', label: 'All Turfs', icon: Building2, path: '/admin/turfs' },
+          { id: 'staff', label: 'Staff', icon: UserCheck, path: '/admin/staff' },
+          { id: 'subscription', label: 'Subscriptions', icon: CreditCard, path: '/admin/subscription' },
+          { id: 'revenue', label: 'Revenue Models', icon: DollarSign, path: '/admin/revenue' },
+          { id: 'players', label: 'Players', icon: Trophy, path: '/admin/players' },
         ];
       case 'turf_owner':
-        return [
-          { id: 'dashboard', label: 'Dashboard', icon: '■', path: '/owner/dashboard' },
-          { id: 'turfs', label: 'My Turfs', icon: '●', path: '/owner/turfs' },
-          { id: 'bookings', label: 'Bookings', icon: '▼', path: '/owner/bookings' },
-          { id: 'staff', label: 'Staff', icon: '♦', path: '/owner/staff' },
+        const baseItems = [
+          { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/owner/dashboard' },
+          { id: 'turfs', label: 'My Turfs', icon: Building2, path: '/owner/turfs' },
+          { id: 'bookings', label: 'Bookings', icon: Calendar, path: '/owner/bookings' },
+          { id: 'staff', label: 'Staff', icon: UserCheck, path: '/owner/staff' },
         ];
+        
+        // Add Analytics if user has Advanced Analytics feature
+        // For now, always show it (will be controlled by dashboard access)
+        baseItems.push({ id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/owner/analytics' });
+        
+        return baseItems;
       case 'staff':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: '■', path: '/staff/dashboard' },
-          { id: 'bookings', label: 'Manage Bookings', icon: '▼', path: '/staff/bookings' },
+          { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/staff/dashboard' },
+          { id: 'bookings', label: 'Manage Bookings', icon: Calendar, path: '/staff/bookings' },
         ];
       default:
         return [];
@@ -114,9 +132,13 @@ const Sidebar = ({ user }) => {
           
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            {isCollapsed ? 
+              <ChevronRight size={18} className="text-gray-600" /> : 
+              <ChevronLeft size={18} className="text-gray-600" />
+            }
           </button>
         </div>
       </div>
@@ -130,10 +152,10 @@ const Sidebar = ({ user }) => {
             <Link
               key={item.id}
               to={item.path}
-              className={`relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+              className={`relative flex items-center ${isCollapsed ? 'justify-center px-2' : 'space-x-3 px-4'} py-3 rounded-xl transition-all duration-200 group ${
                 isActive
-                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-md border border-blue-100'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:shadow-sm'
               }`}
             >
               {/* Active indicator */}
@@ -145,11 +167,18 @@ const Sidebar = ({ user }) => {
               )}
               
               {/* Icon */}
-              <span className={`text-lg font-bold transition-colors ${
-                isActive ? 'text-blue-600' : 'text-gray-500 group-hover:text-blue-500'
+              <div className={`${isCollapsed ? 'w-10 h-10' : 'w-8 h-8'} rounded-lg flex items-center justify-center transition-all duration-200 ${
+                isActive 
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg transform scale-105' 
+                  : 'bg-gray-100 group-hover:bg-gradient-to-r group-hover:from-gray-700 group-hover:to-gray-800 group-hover:shadow-md group-hover:scale-105'
               }`}>
-                {item.icon}
-              </span>
+                <item.icon 
+                  size={isCollapsed ? 20 : 16} 
+                  className={`transition-all duration-200 ${
+                    isActive ? 'text-white' : 'text-gray-600 group-hover:text-white'
+                  }`} 
+                />
+              </div>
               
               {/* Label */}
               <AnimatePresence mode="wait">

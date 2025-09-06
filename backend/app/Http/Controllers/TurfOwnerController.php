@@ -18,14 +18,27 @@ class TurfOwnerController extends OptimizedBaseController
             return $this->errorResponse('Unauthorized', 403);
         }
 
-        $cacheKey = 'turf_owners_' . md5(serialize($request->all()));
-        
-        $query = $this->buildQuery(User::where('role', 'turf_owner'), $request)
-            ->with(['turfs', 'subscriptions.revenueModel']);
-
-        return Cache::remember($cacheKey, 300, function () use ($query, $request) {
-            return $this->paginateResponse($query, $request);
+        $query = User::where('role', 'turf_owner')
+            ->with(['turfs']);
+            
+        // Add current plan information
+        $owners = $query->get()->map(function ($owner) {
+            $assignment = \App\Models\RevenueModelAssignment::where('owner_id', $owner->id)
+                ->where('status', 'active')
+                ->with('revenueModel')
+                ->first();
+                
+            $owner->current_plan = $assignment ? $assignment->revenueModel->name : null;
+            $owner->plan_expires = $assignment ? $assignment->end_date : null;
+            $owner->turfs_count = $owner->turfs->count();
+            
+            return $owner;
         });
+
+        return response()->json([
+            'success' => true,
+            'data' => $owners
+        ]);
     }
 
     protected function getAllowedFilters(): array
