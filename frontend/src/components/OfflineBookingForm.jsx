@@ -1,60 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { Calendar, Clock, User, Phone, Mail, CreditCard, FileText, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { apiService } from '../services/api';
 
-const OfflineBookingForm = ({ isOpen, onClose, turfs = [] }) => {
+const OfflineBookingForm = ({ isOpen, onClose, turfs = [], planInfo = null }) => {
   const [formData, setFormData] = useState({
     turf_id: '',
-    booking_plan: 'single',
     date: '',
-    start_time: '',
-    end_time: '',
     customer_name: '',
     customer_phone: '',
     customer_email: '',
-    amount: '',
-    advance_amount: '',
+    booking_plan: 'single',
     plan_duration: 1,
-    recurring_days: [],
-    notes: ''
+    slot_price: 500
   });
+  
+  const [selectedSlots, setSelectedSlots] = useState([]);
   
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
-  const bookingPlans = [
-    { value: 'single', label: 'Single Day', description: 'One-time booking' },
-    { value: 'daily', label: 'Daily Plan', description: 'Consecutive days' },
-    { value: 'weekly', label: 'Weekly Plan', description: 'Specific days each week' },
-    { value: 'monthly', label: 'Monthly Plan', description: 'Full month access' }
-  ];
 
-  const weekDays = [
-    { value: 0, label: 'Sun' },
-    { value: 1, label: 'Mon' },
-    { value: 2, label: 'Tue' },
-    { value: 3, label: 'Wed' },
-    { value: 4, label: 'Thu' },
-    { value: 5, label: 'Fri' },
-    { value: 6, label: 'Sat' }
-  ];
 
   useEffect(() => {
     if (formData.turf_id && formData.date) {
       fetchAvailableSlots();
+      setSelectedSlots([]); // Clear selected slots when turf/date changes
     }
   }, [formData.turf_id, formData.date]);
 
   const fetchAvailableSlots = async () => {
+    if (!formData.turf_id || !formData.date) {
+      setAvailableSlots([]);
+      return;
+    }
+    
     try {
       setSlotsLoading(true);
-      const response = await apiService.get(`/turfs/${formData.turf_id}/available-slots?date=${formData.date}`);
-      setAvailableSlots(response.data.slots || []);
+      const response = await apiService.getAvailableSlots(formData.turf_id, formData.date);
+      
+      if (response.data && Array.isArray(response.data.slots)) {
+        setAvailableSlots(response.data.slots);
+      } else {
+        console.warn('Invalid slots data received:', response.data);
+        setAvailableSlots([]);
+      }
     } catch (error) {
-      toast.error('Failed to fetch available slots');
+      console.error('Error fetching slots:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch available slots';
+      toast.error(errorMessage);
+      setAvailableSlots([]);
     } finally {
       setSlotsLoading(false);
     }
@@ -62,57 +59,118 @@ const OfflineBookingForm = ({ isOpen, onClose, turfs = [] }) => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSlotToggle = (slot) => {
+    if (!slot.available) {
+      toast.error('This time slot is not available');
+      return;
+    }
     
-    // Auto-calculate remaining amount
-    if (field === 'amount' || field === 'advance_amount') {
-      const amount = field === 'amount' ? parseFloat(value) || 0 : parseFloat(formData.amount) || 0;
-      const advance = field === 'advance_amount' ? parseFloat(value) || 0 : parseFloat(formData.advance_amount) || 0;
-      setFormData(prev => ({ ...prev, remaining_amount: Math.max(0, amount - advance) }));
+    setSelectedSlots(prev => {
+      const isSelected = prev.some(s => s.start_time === slot.start_time);
+      if (isSelected) {
+        return prev.filter(s => s.start_time !== slot.start_time);
+      } else {
+        // Validate slot data
+        if (!slot.start_time || !slot.end_time) {
+          toast.error('Invalid slot data');
+          return prev;
+        }
+        
+        return [...prev, {
+          start_time: slot.start_time,
+          end_time: slot.end_time
+        }];
+      }
+    });
+  };
+
+  const calculateTotalAmount = () => {
+    const baseAmount = selectedSlots.length * formData.slot_price;
+    const duration = formData.plan_duration;
+    
+    switch (formData.booking_plan) {
+      case 'daily': return baseAmount * duration;
+      case 'weekly': return baseAmount * duration * 7;
+      case 'monthly': return baseAmount * duration * 30;
+      case 'yearly': return baseAmount * duration * 365;
+      default: return baseAmount;
     }
   };
 
-  const handleRecurringDayToggle = (day) => {
-    setFormData(prev => ({
-      ...prev,
-      recurring_days: prev.recurring_days.includes(day)
-        ? prev.recurring_days.filter(d => d !== day)
-        : [...prev.recurring_days, day]
-    }));
-  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form data
+    if (!formData.turf_id || !formData.date || selectedSlots.length === 0) {
+      toast.error('Please fill all required fields and select at least one time slot');
+      return;
+    }
+    
+    if (!formData.customer_name.trim() || !formData.customer_phone.trim()) {
+      toast.error('Customer name and phone are required');
+      return;
+    }
+    
+    if (formData.slot_price <= 0) {
+      toast.error('Slot price must be greater than 0');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      await apiService.post('/bookings', {
-        ...formData,
-        booking_type: 'offline'
-      });
+      // Prepare booking data
+      const bookingData = {
+        turf_id: parseInt(formData.turf_id),
+        date: formData.date,
+        selected_slots: selectedSlots,
+        customer_name: formData.customer_name.trim(),
+        customer_phone: formData.customer_phone.trim(),
+        customer_email: formData.customer_email.trim() || null,
+        booking_type: 'offline',
+        booking_plan: formData.booking_plan,
+        plan_duration: formData.plan_duration,
+        amount: calculateTotalAmount(),
+        advance_amount: 0,
+        notes: null
+      };
       
-      toast.success('Offline booking created successfully!');
-      onClose();
-      setFormData({
-        turf_id: '',
-        booking_plan: 'single',
-        date: '',
-        start_time: '',
-        end_time: '',
-        customer_name: '',
-        customer_phone: '',
-        customer_email: '',
-        amount: '',
-        advance_amount: '',
-        plan_duration: 1,
-        recurring_days: [],
-        notes: ''
-      });
-      // Refresh parent component data if callback provided
-      if (window.location.pathname.includes('bookings')) {
-        window.location.reload();
+      console.log('Sending booking data:', bookingData);
+      const response = await apiService.createBooking(bookingData);
+      console.log('Booking response:', response);
+      
+      if (response.data?.success) {
+        toast.success(response.data.message || 'Booking created successfully!');
+        onClose();
+        // Reset form
+        setFormData({
+          turf_id: '',
+          date: '',
+          customer_name: '',
+          customer_phone: '',
+          customer_email: '',
+          booking_plan: 'single',
+          plan_duration: 1,
+          slot_price: 500
+        });
+        setSelectedSlots([]);
+        setAvailableSlots([]);
+        
+        // Refresh parent component data
+        if (window.location.pathname.includes('bookings')) {
+          window.location.reload();
+        }
+      } else {
+        throw new Error(response.data?.message || 'Booking creation failed');
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create booking');
+      console.error('Booking creation error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create booking';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -125,7 +183,7 @@ const OfflineBookingForm = ({ isOpen, onClose, turfs = [] }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
@@ -144,261 +202,178 @@ const OfflineBookingForm = ({ isOpen, onClose, turfs = [] }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              {/* Turf Selection */}
+          <div className="space-y-6">
+            {/* Turf & Date Selection */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="w-4 h-4 inline mr-1" />
-                  Select Turf
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Turf</label>
                 <select
                   value={formData.turf_id}
                   onChange={(e) => handleInputChange('turf_id', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   required
                 >
                   <option value="">Choose a turf</option>
                   {turfs.map(turf => (
                     <option key={turf.id} value={turf.id}>
-                      {turf.turf_name} - {turf.location}
+                      {turf.turf_name}
                     </option>
                   ))}
                 </select>
               </div>
-
-              {/* Booking Plan */}
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Booking Plan</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {bookingPlans.map(plan => (
-                    <button
-                      key={plan.value}
-                      type="button"
-                      onClick={() => handleInputChange('booking_plan', plan.value)}
-                      className={`p-3 border-2 rounded-lg text-left transition-all ${
-                        formData.booking_plan === plan.value
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="font-medium text-sm">{plan.label}</div>
-                      <div className="text-xs text-gray-500">{plan.description}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Date and Duration */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleInputChange('date', e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                
-                {formData.booking_plan !== 'single' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Duration ({formData.booking_plan === 'daily' ? 'days' : formData.booking_plan === 'weekly' ? 'weeks' : 'months'})
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.plan_duration}
-                      onChange={(e) => handleInputChange('plan_duration', parseInt(e.target.value))}
-                      min="1"
-                      max={formData.booking_plan === 'daily' ? '30' : formData.booking_plan === 'weekly' ? '12' : '6'}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      required
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Weekly Recurring Days */}
-              {formData.booking_plan === 'weekly' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Days</label>
-                  <div className="flex space-x-2">
-                    {weekDays.map(day => (
-                      <button
-                        key={day.value}
-                        type="button"
-                        onClick={() => handleRecurringDayToggle(day.value)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          formData.recurring_days.includes(day.value)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {day.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Customer Information */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900 flex items-center">
-                  <User className="w-4 h-4 mr-2" />
-                  Customer Information
-                </h3>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    value={formData.customer_name}
-                    onChange={(e) => handleInputChange('customer_name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter customer name"
-                    required
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input
-                      type="tel"
-                      value={formData.customer_phone}
-                      onChange={(e) => handleInputChange('customer_phone', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="+91 98765 43210"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
-                    <input
-                      type="email"
-                      value={formData.customer_email}
-                      onChange={(e) => handleInputChange('customer_email', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="customer@email.com"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-6">
-              {/* Time Slots */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Clock className="w-4 h-4 inline mr-1" />
-                  Available Time Slots
-                </label>
-                
-                {slotsLoading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-gray-500 text-sm mt-2">Loading slots...</p>
-                  </div>
-                ) : availableSlots.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                    {availableSlots.map((slot, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        disabled={!slot.available}
-                        onClick={() => {
-                          handleInputChange('start_time', slot.start_time);
-                          handleInputChange('end_time', slot.end_time);
-                        }}
-                        className={`p-3 rounded-lg text-sm font-medium transition-all ${
-                          formData.start_time === slot.start_time
-                            ? 'bg-blue-600 text-white'
-                            : slot.available
-                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
-                            : 'bg-red-50 text-red-400 border border-red-200 cursor-not-allowed'
-                        }`}
-                      >
-                        {slot.display}
-                        {!slot.available && (
-                          <div className="text-xs mt-1">Booked</div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Clock className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>Select turf and date to view available slots</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Payment Information */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-gray-900 flex items-center">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Payment Details
-                </h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
-                    <input
-                      type="number"
-                      value={formData.amount}
-                      onChange={(e) => handleInputChange('amount', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Advance Paid</label>
-                    <input
-                      type="number"
-                      value={formData.advance_amount}
-                      onChange={(e) => handleInputChange('advance_amount', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-                
-                {formData.amount && formData.advance_amount && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <div className="text-sm text-blue-800">
-                      <strong>Remaining Amount: ₹{(parseFloat(formData.amount) - parseFloat(formData.advance_amount)).toFixed(2)}</strong>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <FileText className="w-4 h-4 inline mr-1" />
-                  Notes (Optional)
-                </label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  rows="3"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Any special requirements or notes..."
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               </div>
             </div>
+
+            {/* Booking Plan */}
+            <div className="grid grid-cols-5 gap-2">
+              {['single', 'daily', 'weekly', 'monthly', 'yearly'].map(plan => (
+                <button
+                  key={plan}
+                  type="button"
+                  onClick={() => {
+                    handleInputChange('booking_plan', plan);
+                    if (plan === 'single') {
+                      handleInputChange('plan_duration', 1);
+                    }
+                  }}
+                  className={`p-2 rounded text-sm font-medium capitalize ${
+                    formData.booking_plan === plan
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200'
+                  }`}
+                >
+                  {plan}
+                </button>
+              ))}
+            </div>
+
+            {/* Duration & Price */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {formData.booking_plan === 'single' ? 'Duration (Fixed)' : 'Duration'}
+                </label>
+                <input
+                  type="number"
+                  value={formData.plan_duration}
+                  onChange={(e) => handleInputChange('plan_duration', parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="12"
+                  disabled={formData.booking_plan === 'single'}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Price per Slot (₹)</label>
+                <input
+                  type="number"
+                  value={formData.slot_price}
+                  onChange={(e) => handleInputChange('slot_price', parseInt(e.target.value) || 0)}
+                  min="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Time Slots */}
+            {formData.turf_id && formData.date && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Time Slots ({selectedSlots.length} selected)
+                </label>
+                {slotsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+                    {availableSlots.map((slot, index) => {
+                      const isSelected = selectedSlots.some(s => s.start_time === slot.start_time);
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          disabled={!slot.available}
+                          onClick={() => handleSlotToggle(slot)}
+                          className={`p-2 rounded text-xs font-medium ${
+                            isSelected
+                              ? 'bg-blue-600 text-white'
+                              : slot.available
+                              ? 'bg-green-50 text-green-700 border hover:bg-green-100'
+                              : 'bg-red-50 text-red-400 cursor-not-allowed'
+                          }`}
+                        >
+                          {slot.display}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Customer Details */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <input
+                  type="text"
+                  value={formData.customer_name}
+                  onChange={(e) => handleInputChange('customer_name', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={formData.customer_phone}
+                  onChange={(e) => handleInputChange('customer_phone', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                <input
+                  type="email"
+                  value={formData.customer_email}
+                  onChange={(e) => handleInputChange('customer_email', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Payment Summary */}
+            {selectedSlots.length > 0 && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-medium text-blue-900 mb-2">Payment Summary</h3>
+                <div className="text-sm text-blue-800 space-y-1">
+                  <div>Slots: {selectedSlots.length} × ₹{formData.slot_price} = ₹{selectedSlots.length * formData.slot_price}</div>
+                  {formData.booking_plan !== 'single' && (
+                    <div>Plan: {formData.booking_plan} × {formData.plan_duration}</div>
+                  )}
+                  <div className="font-bold text-lg border-t pt-2">
+                    Total Amount: ₹{calculateTotalAmount()}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Buttons */}
@@ -412,7 +387,7 @@ const OfflineBookingForm = ({ isOpen, onClose, turfs = [] }) => {
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.turf_id || !formData.date || !formData.start_time || !formData.customer_name}
+              disabled={loading || !formData.turf_id || !formData.date || selectedSlots.length === 0 || !formData.customer_name || !formData.customer_phone || !formData.slot_price || formData.slot_price <= 0}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {loading ? (

@@ -17,6 +17,15 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'role',
         'phone',
+        'business_name',
+        'business_description',
+        'business_logo',
+        'business_address',
+        'business_type',
+        'gst_number',
+        'pan_number',
+        'bank_account',
+        'bank_ifsc',
         'status',
         'revenue_model_id',
         'billing_cycle',
@@ -67,5 +76,20 @@ class User extends Authenticatable implements JWTSubject
     public function revenueModel()
     {
         return $this->belongsTo(RevenueModel::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
     }
 }

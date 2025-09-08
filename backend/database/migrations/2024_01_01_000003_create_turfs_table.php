@@ -14,10 +14,11 @@ return new class extends Migration
             $table->string('turf_name');
             $table->string('location');
             $table->integer('capacity');
-            $table->decimal('price_per_hour', 10, 2);
+            $table->json('pricing_structure')->nullable();
             $table->string('sport_type')->nullable();
             $table->text('facilities')->nullable();
             $table->text('description')->nullable();
+            $table->decimal('price_per_hour', 10, 2)->nullable(); // Keep for backward compatibility
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

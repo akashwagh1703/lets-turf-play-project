@@ -180,11 +180,18 @@ const Login = () => {
             className="mt-8 text-center"
           >
             <div className="text-sm text-gray-500">
-              <div className="mb-2">Demo Credentials:</div>
-              <div className="space-y-1 text-xs">
-                <div>Super Admin: admin@example.com / password</div>
-                <div>Turf Owner: owner@example.com / password</div>
-                <div>Staff: staff@example.com / password</div>
+              <div className="mb-3 font-medium">Available Test Accounts:</div>
+              <div className="space-y-2 text-xs bg-gray-50 p-4 rounded-lg">
+                <div className="font-medium text-blue-600">Super Admin:</div>
+                <div>admin@example.com / password</div>
+                
+                <div className="font-medium text-green-600 mt-3">Turf Owner:</div>
+                <div>owner@example.com / password</div>
+                
+                <div className="font-medium text-purple-600 mt-3">Staff Members:</div>
+                <div>staff@example.com / password</div>
+                <div>john@example.com / password</div>
+                <div>jane@example.com / password</div>
               </div>
             </div>
           </motion.div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, Lock, Save } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const ProfileSettings = () => {
@@ -34,9 +34,45 @@ const ProfileSettings = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Profile updated successfully!');
+      if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+        toast.error('Passwords do not match');
+        return;
+      }
+
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      };
+
+      if (formData.newPassword) {
+        updateData.current_password = formData.currentPassword;
+        updateData.password = formData.newPassword;
+        updateData.password_confirmation = formData.confirmPassword;
+      }
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/profile/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        toast.success('Profile updated successfully!');
+        setFormData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        }));
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to update profile');
+      }
     } catch (error) {
       toast.error('Failed to update profile');
     } finally {

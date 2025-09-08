@@ -266,33 +266,34 @@ const SuperAdminDashboard = () => {
     ];
   };
 
-  const StatCard = ({ title, value, change, icon: Icon, color, trend }) => (
+  const StatCard = ({ title, value, change, icon: Icon, color, trend, prefix = '' }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+      className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200"
     >
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">
-            <CountUp end={value} duration={2} />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">
+            {prefix}<CountUp end={value} duration={1.5} separator="," />
           </p>
-          <div className="flex items-center mt-2">
-            {trend === 'up' ? (
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-            ) : (
-              <ArrowDownRight className="w-4 h-4 text-red-500" />
-            )}
-            <span className={`text-sm font-medium ml-1 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-              {change}%
-            </span>
-            <span className="text-sm text-gray-500 ml-1">vs last month</span>
-          </div>
+          {change && (
+            <div className={`flex items-center mt-1 text-xs ${
+              trend === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {trend === 'up' ? (
+                <ArrowUpRight className="w-3 h-3 mr-1" />
+              ) : (
+                <ArrowDownRight className="w-3 h-3 mr-1" />
+              )}
+              {change}% vs last month
+            </div>
+          )}
         </div>
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color}`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
     </motion.div>
@@ -324,8 +325,8 @@ const SuperAdminDashboard = () => {
                 </div>
               </motion.div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+              {/* Stats Cards - First Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                   title="Total Revenue"
                   value={stats.total_revenue || 0}
@@ -333,6 +334,7 @@ const SuperAdminDashboard = () => {
                   icon={DollarSign}
                   color="bg-green-500"
                   trend="up"
+                  prefix="₹"
                 />
                 <StatCard
                   title="Total Bookings"
@@ -350,6 +352,10 @@ const SuperAdminDashboard = () => {
                   color="bg-purple-500"
                   trend="down"
                 />
+              </div>
+
+              {/* Stats Cards - Second Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatCard
                   title="Turf Owners"
                   value={stats.active_owners || 0}
@@ -370,7 +376,7 @@ const SuperAdminDashboard = () => {
                   title="Total Players"
                   value={stats.total_players || 0}
                   change={15.3}
-                  icon={Users}
+                  icon={Activity}
                   color="bg-orange-500"
                   trend="up"
                 />
@@ -591,71 +597,109 @@ const SuperAdminDashboard = () => {
                 </motion.div>
               </div>
 
-              {/* Key Metrics Summary */}
+              {/* Enhanced Key Metrics Summary */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-8 shadow-lg border border-gray-100/50 backdrop-blur-sm"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Platform Summary</h3>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{stats.total_owners || 0}</div>
-                    <div className="text-sm text-gray-600">Total Owners</div>
-                    <div className="text-xs text-green-600">{stats.active_owners || 0} Active</div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Platform Summary</h3>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Activity className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{stats.total_turfs || 0}</div>
-                    <div className="text-sm text-gray-600">All Turfs</div>
-                    <div className="text-xs text-green-600">{stats.active_turfs || 0} Active</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-indigo-600">{stats.total_bookings || 0}</div>
-                    <div className="text-sm text-gray-600">All Bookings</div>
-                    <div className="text-xs text-green-600">{stats.confirmed_bookings || 0} Confirmed</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-cyan-600">{stats.total_staff || 0}</div>
-                    <div className="text-sm text-gray-600">Total Staff</div>
-                    <div className="text-xs text-green-600">{stats.active_staff || 0} Active</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">{stats.total_players || 0}</div>
-                    <div className="text-sm text-gray-600">Total Players</div>
-                    <div className="text-xs text-blue-600">Registered</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">₹{((stats.total_revenue || 0) / 1000).toFixed(0)}K</div>
-                    <div className="text-sm text-gray-600">Total Revenue</div>
-                    <div className="text-xs text-green-600">All Time</div>
-                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                  {[
+                    { label: 'Total Owners', value: stats.total_owners || 0, active: stats.active_owners || 0, color: 'from-blue-500 to-blue-600', icon: Users },
+                    { label: 'All Turfs', value: stats.total_turfs || 0, active: stats.active_turfs || 0, color: 'from-purple-500 to-purple-600', icon: Building },
+                    { label: 'All Bookings', value: stats.total_bookings || 0, active: stats.confirmed_bookings || 0, color: 'from-indigo-500 to-indigo-600', icon: Calendar },
+                    { label: 'Total Staff', value: stats.total_staff || 0, active: stats.active_staff || 0, color: 'from-cyan-500 to-cyan-600', icon: UserCheck },
+                    { label: 'Total Players', value: stats.total_players || 0, active: null, color: 'from-orange-500 to-orange-600', icon: Activity },
+                    { label: 'Total Revenue', value: `₹${((stats.total_revenue || 0) / 1000).toFixed(0)}K`, active: null, color: 'from-green-500 to-green-600', icon: DollarSign }
+                  ].map((item, index) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ y: -2, scale: 1.02 }}
+                        className="relative bg-white rounded-xl p-4 shadow-md border border-gray-100 hover:shadow-lg transition-all duration-300 group overflow-hidden"
+                      >
+                        <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-r ${item.color} flex items-center justify-center shadow-lg`}>
+                              <IconComponent className="w-5 h-5 text-white" />
+                            </div>
+                            <div className={`text-2xl font-black bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}>
+                              <CountUp end={typeof item.value === 'string' ? parseInt(item.value.replace(/[^0-9]/g, '')) : item.value} duration={2} separator="," />
+                              {typeof item.value === 'string' && item.value.includes('K') && 'K'}
+                            </div>
+                          </div>
+                          <div className="text-left">
+                            <div className="text-sm font-semibold text-gray-900 mb-1">{item.label}</div>
+                            {item.active !== null && (
+                              <div className="text-xs font-medium text-green-600">
+                                <CountUp end={item.active} duration={2} /> Active
+                              </div>
+                            )}
+                            {item.label === 'Total Players' && (
+                              <div className="text-xs font-medium text-blue-600">Registered</div>
+                            )}
+                            {item.label === 'Total Revenue' && (
+                              <div className="text-xs font-medium text-green-600">All Time</div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
 
-              {/* Booking Status Overview */}
+              {/* Enhanced Booking Status Overview */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-8 shadow-lg border border-gray-100/50"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Status Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{stats.total_bookings || 0}</div>
-                    <div className="text-sm text-gray-600">Total Bookings</div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Booking Status Overview</h3>
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{stats.confirmed_bookings || 0}</div>
-                    <div className="text-sm text-gray-600">Confirmed</div>
-                  </div>
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">{stats.pending_bookings || 0}</div>
-                    <div className="text-sm text-gray-600">Pending</div>
-                  </div>
-                  <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">{stats.cancelled_bookings || 0}</div>
-                    <div className="text-sm text-gray-600">Cancelled</div>
-                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { label: 'Total Bookings', value: stats.total_bookings || 0, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50' },
+                    { label: 'Confirmed', value: stats.confirmed_bookings || 0, color: 'from-green-500 to-green-600', bg: 'bg-green-50' },
+                    { label: 'Pending', value: stats.pending_bookings || 0, color: 'from-yellow-500 to-yellow-600', bg: 'bg-yellow-50' },
+                    { label: 'Cancelled', value: stats.cancelled_bookings || 0, color: 'from-red-500 to-red-600', bg: 'bg-red-50' }
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1, type: 'spring' }}
+                      whileHover={{ y: -4, scale: 1.05 }}
+                      className={`relative text-center p-6 ${item.bg} rounded-2xl border border-white/50 shadow-md hover:shadow-lg transition-all duration-300 group overflow-hidden`}
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.5 + index * 0.1, type: 'spring' }}
+                        className={`text-3xl font-black bg-gradient-to-r ${item.color} bg-clip-text text-transparent mb-2`}
+                      >
+                        <CountUp end={item.value} duration={2.5} />
+                      </motion.div>
+                      <div className="text-sm font-semibold text-gray-700">{item.label}</div>
+                      <div className={`absolute top-2 right-2 w-3 h-3 rounded-full bg-gradient-to-r ${item.color} opacity-60`} />
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             </div>

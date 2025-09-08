@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User, Building, Search, Filter, Eye, Edit, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { Calendar, Clock, User, Building, Search, Filter, Eye, Edit, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-react';
 import Modal from 'react-modal';
 import toast from 'react-hot-toast';
 import CountUp from 'react-countup';
@@ -12,6 +12,7 @@ Modal.setAppElement('#root');
 const BookingManagement = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showOfflineBookingForm, setShowOfflineBookingForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -19,34 +20,66 @@ const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [planInfo, setPlanInfo] = useState(null);
 
   useEffect(() => {
     fetchData();
+    fetchPlanInfo();
   }, []);
+
+  const fetchPlanInfo = async () => {
+    try {
+      const response = await apiService.getMyPlan();
+      setPlanInfo(response.data?.plan);
+    } catch (error) {
+      console.error('Failed to fetch plan info:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const [bookingsRes, turfsRes] = await Promise.all([
-        apiService.get('/bookings?include=turf,player').catch(() => ({ data: { data: [] } })),
-        apiService.get('/turfs').catch(() => ({ data: { data: [] } }))
+        apiService.getBookings({ include: 'turf,player' }).catch((error) => {
+          console.error('Failed to fetch bookings:', error);
+          return { data: { data: [] } };
+        }),
+        apiService.getTurfs().catch((error) => {
+          console.error('Failed to fetch turfs:', error);
+          return { data: { data: [] } };
+        })
       ]);
       
-      setBookings(bookingsRes.data?.data || []);
-      setTurfs(turfsRes.data?.data || []);
+      // Handle both paginated and direct array responses
+      const bookingsData = bookingsRes.data?.data || bookingsRes.data || [];
+      const turfsData = turfsRes.data?.data || turfsRes.data || [];
+      
+      setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+      setTurfs(Array.isArray(turfsData) ? turfsData : []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast.error('Failed to load data. Please refresh the page.');
     } finally {
       setLoading(false);
     }
   };
-  const stats = useMemo(() => ({
-    total: bookings.length,
-    confirmed: bookings.filter(b => b.status === 'confirmed').length,
-    pending: bookings.filter(b => b.status === 'pending').length,
-    cancelled: bookings.filter(b => b.status === 'cancelled').length,
-    revenue: bookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + b.amount, 0)
-  }), [bookings]);
+  const stats = useMemo(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyBookings = bookings.filter(b => {
+      const bookingDate = new Date(b.created_at || b.date);
+      return bookingDate.getMonth() === currentMonth && bookingDate.getFullYear() === currentYear;
+    });
+    
+    return {
+      total: bookings.length,
+      confirmed: bookings.filter(b => b.status === 'confirmed').length,
+      pending: bookings.filter(b => b.status === 'pending').length,
+      cancelled: bookings.filter(b => b.status === 'cancelled').length,
+      revenue: bookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + b.amount, 0),
+      monthlyBookings: monthlyBookings.length
+    };
+  }, [bookings]);
 
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
@@ -63,18 +96,31 @@ const BookingManagement = () => {
   }, [bookings, searchTerm, statusFilter, dateFilter]);
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
+    if (!bookingId || !newStatus) {
+      toast.error('Invalid booking or status');
+      return;
+    }
+    
     try {
-      await apiService.put(`/bookings/${bookingId}`, { status: newStatus });
-      toast.success(`Booking ${newStatus} successfully!`);
-      fetchData();
+      const response = await apiService.updateBooking(bookingId, { status: newStatus });
+      
+      if (response.data?.success) {
+        toast.success(response.data.message || `Booking ${newStatus} successfully!`);
+        fetchData();
+      } else {
+        throw new Error(response.data?.message || 'Update failed');
+      }
     } catch (error) {
-      toast.error('Failed to update booking status');
+      console.error('Status update error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update booking status';
+      toast.error(errorMessage);
     }
   };
 
   const handleOfflineBookingSuccess = () => {
     setShowOfflineBookingForm(false);
     fetchData();
+    fetchPlanInfo(); // Refresh plan info to update limits
   };
 
   const handleOfflineBookingClose = () => {
@@ -84,6 +130,23 @@ const BookingManagement = () => {
   const handleView = (booking) => {
     setSelectedBooking(booking);
     setShowViewModal(true);
+  };
+
+  const handleEdit = (booking) => {
+    setSelectedBooking(booking);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = async (bookingId) => {
+    if (window.confirm('Are you sure you want to delete this booking?')) {
+      try {
+        await apiService.deleteBooking(bookingId);
+        toast.success('Booking deleted successfully!');
+        fetchData();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to delete booking');
+      }
+    }
   };
 
   const StatCard = ({ title, value, icon: Icon, color, prefix = '' }) => (
@@ -124,8 +187,18 @@ const BookingManagement = () => {
             <p className="text-gray-600 mt-1">Manage all turf bookings and reservations</p>
           </div>
           <button
-            onClick={() => setShowOfflineBookingForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+            onClick={() => {
+              if (planInfo && stats.monthlyBookings >= planInfo.limits?.bookings?.max) {
+                toast.error(`You have reached your monthly booking limit (${planInfo.limits.bookings.max}). Upgrade your plan to add more bookings.`);
+                return;
+              }
+              setShowOfflineBookingForm(true);
+            }}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
+              planInfo && stats.monthlyBookings >= planInfo.limits?.bookings?.max
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
             <Plus className="w-5 h-5" />
             <span>Add Offline Booking</span>
@@ -139,6 +212,27 @@ const BookingManagement = () => {
           <StatCard title="Cancelled" value={stats.cancelled} icon={XCircle} color="bg-red-500" />
           <StatCard title="Revenue" value={stats.revenue} icon={Building} color="bg-purple-500" prefix="₹" />
         </div>
+
+        {/* Plan Limit Warning */}
+        {planInfo && stats.monthlyBookings > 0 && stats.monthlyBookings >= planInfo.limits?.bookings?.max && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm"
+          >
+            <div className="flex items-center space-x-3">
+              <Calendar className="text-yellow-600" size={20} />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-800">Monthly Booking Limit Reached</h3>
+                <p className="text-sm text-yellow-700">
+                  You have reached your monthly booking limit ({planInfo.limits.bookings.max}). 
+                  <span className="font-medium"> Upgrade your plan to add more bookings this month.</span>
+                </p>
+              </div>
+              <Calendar className="text-yellow-600" size={20} />
+            </div>
+          </motion.div>
+        )}
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
@@ -256,6 +350,9 @@ const BookingManagement = () => {
                         <button onClick={() => handleView(booking)} className="text-blue-600 hover:text-blue-900 p-1 rounded">
                           <Eye size={16} />
                         </button>
+                        <button onClick={() => handleEdit(booking)} className="text-blue-600 hover:text-blue-900 p-1 rounded">
+                          <Edit size={16} />
+                        </button>
                         {booking.status === 'pending' && (
                           <>
                             <button onClick={() => handleStatusUpdate(booking.id, 'confirmed')} className="text-green-600 hover:text-green-900 p-1 rounded">
@@ -266,6 +363,9 @@ const BookingManagement = () => {
                             </button>
                           </>
                         )}
+                        <button onClick={() => handleDelete(booking.id)} className="text-red-600 hover:text-red-900 p-1 rounded">
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -364,11 +464,67 @@ const BookingManagement = () => {
           )}
         </Modal>
 
+        {/* Edit Booking Modal */}
+        <Modal
+          isOpen={showEditModal}
+          onRequestClose={() => setShowEditModal(false)}
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-hidden outline-none"
+          overlayClassName="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        >
+          {selectedBooking && (
+            <>
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">Update Booking Status</h2>
+                <p className="text-gray-600">#{selectedBooking.id}</p>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <div className="space-y-2">
+                    {['pending', 'confirmed', 'cancelled'].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          handleStatusUpdate(selectedBooking.id, status);
+                          setShowEditModal(false);
+                        }}
+                        className={`w-full p-3 text-left rounded-lg border-2 transition-all ${
+                          selectedBooking.status === status
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="font-medium capitalize">{status}</div>
+                        <div className="text-xs text-gray-500">
+                          {status === 'pending' && 'Awaiting confirmation'}
+                          {status === 'confirmed' && 'Booking confirmed'}
+                          {status === 'cancelled' && 'Booking cancelled'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6 border-t border-gray-200 flex justify-end">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+
         {/* Offline Booking Form */}
         <OfflineBookingForm
           isOpen={showOfflineBookingForm}
           onClose={handleOfflineBookingClose}
           turfs={turfs}
+          planInfo={planInfo}
         />
       </div>
     </div>

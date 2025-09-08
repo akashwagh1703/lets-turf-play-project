@@ -24,7 +24,7 @@ const StaffLayout = () => {
         <Route path="/dashboard" element={<StaffDashboard />} />
         <Route path="/bookings" element={<StaffBookingManagement />} />
         <Route path="/profile" element={<ProfileSettings />} />
-        <Route path="/settings" element={<SystemSettings />} />
+        <Route path="/settings" element={<ProfileSettings />} />
       </Routes>
     </Layout>
   );

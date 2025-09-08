@@ -22,10 +22,23 @@ const TurfManagement = () => {
     turf_name: '',
     location: '',
     capacity: '',
-    hourly_rate: '',
     sport_type: '',
     facilities: '',
-    description: ''
+    description: '',
+    pricing: {
+      weekday: {
+        morning: '', // 6-12
+        afternoon: '', // 12-18
+        evening: '', // 18-22
+        night: '' // 22-6
+      },
+      weekend: {
+        morning: '',
+        afternoon: '',
+        evening: '',
+        night: ''
+      }
+    }
   });
 
   const debouncedSearch = useDebounce(searchTerm, 500);
@@ -81,23 +94,34 @@ const TurfManagement = () => {
         turf_name: formData.turf_name,
         location: formData.location,
         capacity: parseInt(formData.capacity),
-        price_per_hour: parseFloat(formData.hourly_rate),
         sport_type: formData.sport_type,
         facilities: formData.facilities,
-        description: formData.description
+        description: formData.description,
+        pricing_structure: formData.pricing
       };
       
       if (selectedTurf) {
-        await apiService.put(`/turfs/${selectedTurf.id}`, submitData);
-        toast.success('Turf updated successfully!');
+        const response = await apiService.updateTurf(selectedTurf.id, submitData);
+        toast.success(response.data?.message || 'Turf updated successfully!');
       } else {
-        await apiService.post('/turfs', submitData);
-        toast.success('Turf created successfully!');
+        const response = await apiService.createTurf(submitData);
+        toast.success(response.data?.message || 'Turf created successfully!');
       }
       
       setShowForm(false);
       setSelectedTurf(null);
-      setFormData({ turf_name: '', location: '', capacity: '', hourly_rate: '', sport_type: '', facilities: '', description: '' });
+      setFormData({ 
+        turf_name: '', 
+        location: '', 
+        capacity: '', 
+        sport_type: '', 
+        facilities: '', 
+        description: '',
+        pricing: {
+          weekday: { morning: '', afternoon: '', evening: '', night: '' },
+          weekend: { morning: '', afternoon: '', evening: '', night: '' }
+        }
+      });
       fetchTurfs();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save turf');
@@ -116,13 +140,26 @@ const TurfManagement = () => {
       turf_name: turf.turf_name,
       location: turf.location,
       capacity: turf.capacity,
-      hourly_rate: turf.hourly_rate,
       sport_type: turf.sport_type,
       facilities: turf.facilities || '',
-      description: turf.description || ''
+      description: turf.description || '',
+      pricing: turf.pricing_structure || {
+        weekday: { morning: '', afternoon: '', evening: '', night: '' },
+        weekend: { morning: '', afternoon: '', evening: '', night: '' }
+      }
     });
     setSelectedTurf(turf);
     setShowForm(true);
+  };
+
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      const response = await apiService.updateTurf(id, { status: !currentStatus });
+      toast.success(`Turf ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
+      fetchTurfs();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    }
   };
 
   const handleDelete = async (id, turfName) => {
@@ -139,11 +176,11 @@ const TurfManagement = () => {
 
     if (result.isConfirmed) {
       try {
-        await apiService.delete(`/turfs/${id}`);
-        toast.success('Turf deleted successfully!');
+        const response = await apiService.deleteTurf(id);
+        toast.success(response.data?.message || 'Turf deleted successfully!');
         fetchTurfs();
       } catch (error) {
-        toast.error('Failed to delete turf');
+        toast.error(error.response?.data?.message || 'Failed to delete turf');
       }
     }
   };
@@ -179,7 +216,18 @@ const TurfManagement = () => {
           <button
             onClick={() => {
               setSelectedTurf(null);
-              setFormData({ turf_name: '', location: '', capacity: '', hourly_rate: '', sport_type: '', facilities: '', description: '' });
+              setFormData({ 
+                turf_name: '', 
+                location: '', 
+                capacity: '', 
+                sport_type: '', 
+                facilities: '', 
+                description: '',
+                pricing: {
+                  weekday: { morning: '', afternoon: '', evening: '', night: '' },
+                  weekend: { morning: '', afternoon: '', evening: '', night: '' }
+                }
+              });
               setShowForm(true);
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
@@ -249,7 +297,22 @@ const TurfManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">₹{turf.hourly_rate}/hour</div>
+                      <div className="text-sm text-gray-900">
+                        {turf.pricing_structure ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                              <span className="text-xs">WD: ₹{turf.pricing_structure.weekday?.morning}-{turf.pricing_structure.weekday?.evening}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                              <span className="text-xs">WE: ₹{turf.pricing_structure.weekend?.morning}-{turf.pricing_structure.weekend?.evening}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          `₹${turf.price_per_hour}/hour`
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500 flex items-center">
                         <Users className="w-3 h-3 mr-1" />
                         {turf.capacity} players
@@ -260,11 +323,14 @@ const TurfManagement = () => {
                       <div className="text-sm text-gray-500">{turf.sport_type}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                        turf.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <button
+                        onClick={() => toggleStatus(turf.id, turf.status)}
+                        className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full transition-colors hover:opacity-80 ${
+                          turf.status ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'
+                        }`}
+                      >
                         {turf.status ? 'active' : 'inactive'}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
@@ -329,15 +395,111 @@ const TurfManagement = () => {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Hourly Rate (₹)</label>
-                <input
-                  type="number"
-                  value={formData.hourly_rate}
-                  onChange={(e) => setFormData({...formData, hourly_rate: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-4">Pricing Structure (₹/hour)</label>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Weekday Pricing */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-3">Weekday Rates</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Morning (6AM - 12PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekday.morning}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekday: {...formData.pricing.weekday, morning: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Afternoon (12PM - 6PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekday.afternoon}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekday: {...formData.pricing.weekday, afternoon: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="600"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Evening (6PM - 10PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekday.evening}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekday: {...formData.pricing.weekday, evening: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="800"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Night (10PM - 6AM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekday.night}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekday: {...formData.pricing.weekday, night: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          placeholder="400"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Weekend Pricing */}
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-green-900 mb-3">Weekend Rates</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Morning (6AM - 12PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekend.morning}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekend: {...formData.pricing.weekend, morning: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="700"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Afternoon (12PM - 6PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekend.afternoon}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekend: {...formData.pricing.weekend, afternoon: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="900"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Evening (6PM - 10PM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekend.evening}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekend: {...formData.pricing.weekend, evening: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="1200"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Night (10PM - 6AM)</label>
+                        <input
+                          type="number"
+                          value={formData.pricing.weekend.night}
+                          onChange={(e) => setFormData({...formData, pricing: {...formData.pricing, weekend: {...formData.pricing.weekend, night: e.target.value}}})}
+                          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="600"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Sport Type</label>

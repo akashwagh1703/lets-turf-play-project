@@ -39,7 +39,10 @@ class StaffController extends Controller
         
         if ($perPage === 'all') {
             $staff = $query->get();
-            return response()->json(['data' => $staff]);
+            return response()->json([
+                'success' => true,
+                'data' => $staff
+            ]);
         }
         
         $staff = $query->paginate($perPage);
@@ -69,7 +72,11 @@ class StaffController extends Controller
             'status' => $request->status ?? true,
         ]);
 
-        return response()->json($staff, 201);
+        return response()->json([
+            'success' => true,
+            'data' => $staff,
+            'message' => 'Staff created successfully'
+        ], 201);
     }
 
     public function show($id)
@@ -80,7 +87,10 @@ class StaffController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         
-        return response()->json($staff);
+        return response()->json([
+            'success' => true,
+            'data' => $staff
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -95,12 +105,19 @@ class StaffController extends Controller
             'staff_name' => 'string|max:255',
             'email' => 'email|unique:staff,email,' . $id,
             'phone' => 'string|max:20',
+            'position' => 'nullable|string|max:255',
+            'salary' => 'nullable|numeric|min:0',
+            'shift_timing' => 'nullable|string|max:255',
             'status' => 'boolean',
         ]);
 
-        $staff->update($request->only(['staff_name', 'email', 'phone', 'status']));
+        $staff->update($request->only(['staff_name', 'email', 'phone', 'position', 'salary', 'shift_timing', 'status']));
         
-        return response()->json($staff);
+        return response()->json([
+            'success' => true,
+            'data' => $staff,
+            'message' => 'Staff updated successfully'
+        ]);
     }
 
     public function destroy($id)
@@ -113,6 +130,9 @@ class StaffController extends Controller
         
         $staff->delete();
         
-        return response()->json(['message' => 'Staff deleted successfully']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Staff deleted successfully'
+        ]);
     }
 }

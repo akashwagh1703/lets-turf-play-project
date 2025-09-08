@@ -14,7 +14,7 @@ A full-stack admin portal with React frontend and Laravel backend for managing t
 - JWT authentication
 - RESTful APIs
 - Role-based access control
-- MySQL database
+- PostgreSQL database
 
 ## Setup Instructions
 
@@ -30,7 +30,15 @@ cd backend
 composer install
 ```
 
-3. Create database `lets_turf_play` in MySQL
+3. Configure PostgreSQL database connection in `.env` file:
+```
+DB_CONNECTION=pgsql
+DB_HOST=115.124.98.61
+DB_PORT=5432
+DB_DATABASE=lets_turf_play
+DB_USERNAME=postgres
+DB_PASSWORD=Supp0rt@123
+```
 
 4. Run migrations:
 ```bash
