@@ -16,6 +16,8 @@ use App\Http\Controllers\RevenueModelAssignmentController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Player\PlayerAuthController;
+use App\Http\Controllers\Player\PlayerTurfController;
 use App\Services\AdvancedAnalyticsService;
 use App\Services\PerformanceOptimizationService;
 use App\Services\SecurityService;
@@ -24,6 +26,24 @@ use App\Models\Subscription;
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+
+// Player Portal Routes
+Route::prefix('player')->group(function () {
+    Route::post('/register', [PlayerAuthController::class, 'register']);
+    Route::post('/login', [PlayerAuthController::class, 'login']);
+    
+    Route::middleware('auth:player')->group(function () {
+        Route::get('/profile', [PlayerAuthController::class, 'profile']);
+        Route::put('/profile', [PlayerAuthController::class, 'updateProfile']);
+        Route::post('/logout', [PlayerAuthController::class, 'logout']);
+        
+        // Turf routes
+        Route::get('/turfs', [PlayerTurfController::class, 'index']);
+        Route::get('/turfs/search', [PlayerTurfController::class, 'search']);
+        Route::get('/turfs/{id}', [PlayerTurfController::class, 'show']);
+        Route::get('/turfs/{id}/availability', [PlayerTurfController::class, 'availability']);
+    });
+});
 
 // Protected routes
 Route::middleware(['auth:api'])->group(function () {
